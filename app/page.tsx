@@ -1,7 +1,21 @@
+import Navbar from "@/components/shared/Navbar";
+import Footer from "@/components/shared/Footer";
+import Hero from "@/components/landing/Hero";
+import HowItWorks from "@/components/landing/HowItWorks";
+import Features from "@/components/landing/Features";
+import CTA from "@/components/landing/CTA";
+
 export default function Home() {
   return (
-    <main className="min-h-screen bg-bg text-text">
-      <p className="font-mono text-primary p-8">Convive — skeleton listo</p>
-    </main>
+    <>
+      <Navbar />
+      <main>
+        <Hero />
+        <HowItWorks />
+        <Features />
+        <CTA />
+      </main>
+      <Footer />
+    </>
   );
 }
