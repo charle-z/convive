@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { SEED_PROFILES } from "@/lib/seed-data";
 
 export async function GET() {
-  // TODO: devolver perfiles seed
-  return NextResponse.json({ profiles: [] });
+  return NextResponse.json({ profiles: SEED_PROFILES });
 }

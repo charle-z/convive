@@ -1,85 +1,57 @@
-// TypeScript interfaces for Convive
-
+// ─── Intención del usuario (PathSelector) ────────────────────────────────────
 export type SearchIntent = "busco-cuarto" | "ofrezco-cuarto" | "busco-grupo";
 
-export type CleanlinessLevel = 1 | 2 | 3 | 4 | 5;
-export type NoiseLevel = 1 | 2 | 3 | 4 | 5;
-export type SleepSchedule = "madrugador" | "normal" | "nocturno";
-export type VisitFrequency = "nunca" | "a-veces" | "seguido" | "siempre";
-export type PetPreference =
-  | "no-tengo-ni-quiero"
-  | "no-tengo-pero-acepto"
-  | "tengo-gato"
-  | "tengo-perro"
-  | "otro";
-export type SmokingPreference = "no-fumo-ni-acepto" | "no-fumo-pero-acepto" | "fumo";
-export type KitchenSharing = "cada-quien" | "flexible" | "compartimos-todo";
-export type PartyFrequency = "nunca" | "ocasional" | "frecuente";
-export type GenderPreference = "me-da-igual" | "solo-hombres" | "solo-mujeres" | "no-binario";
-export type CouplePreference = "no-parejas" | "acepto" | "yo-tengo-pareja";
+// ─── Respuestas del formulario (ConvivenceForm) ──────────────────────────────
+// Los IDs coinciden exactamente con los option.id del quiz.
 
-export type Dealbreaker =
-  | "no-fumadores"
-  | "no-mascotas"
-  | "no-fiestas"
-  | "no-desorden-extremo"
-  | "no-visitas-sin-aviso"
-  | "sin-ruido-despues-10pm";
+export interface ProfileAnswers {
+  presupuesto: "menos-600" | "600-900" | "900-1200" | "mas-1200";
+  zona: "norte" | "sur" | "centro" | "me-adapto";
+  limpieza: "obsesivo" | "ordenado" | "relajado" | "caos";
+  horario: "madrugador" | "maananero" | "noctambulo" | "variable";
+  ruido: "silencio" | "normal" | "ocasional" | "mucho";
+  visitas: "casi-nunca" | "1-2-semana" | "casi-siempre" | "casa-abierta";
+  mascotas: "no-quiero" | "tengo" | "acepto" | "alergico";
+  fumar: "no-fumo" | "afuera" | "en-casa" | "indiferente";
+  fecha: "ya" | "2-4-semanas" | "1-2-meses" | "explorando";
+  cocina: "todos-dias" | "ocasional" | "casi-no" | "minimo";
+  fiestas: "nunca" | "ocasional" | "frecuente" | "estilo-vida";
+  genero: "solo-mujeres" | "solo-hombres" | "sin-preferencia" | "mixto";
+  pareja: "ok" | "respeto" | "prefiero-no" | "depende";
+  gastos: "50-50" | "flexible" | "coordinador" | "acordamos";
+  dealbreakers: string[];
+}
 
-export interface ConvivenceProfile {
+// ─── Perfil del seed (ProfileAnswers + metadata visual) ──────────────────────
+export interface SeedProfile extends ProfileAnswers {
   id: string;
+  nombre: string;
+  edad: number;
+  ocupacion: string;
+  barrio: string;
+  foto: string;
+  descripcion: string;
+}
+
+// ─── Matching engine ─────────────────────────────────────────────────────────
+
+export interface CategoryScore {
   name: string;
-  age: number;
-  avatar?: string;
-  occupation: string;
-  intent: SearchIntent;
-
-  // Matching variables
-  budget: number; // COP mensual
-  zones: string[]; // Barrios preferidos
-  moveInDate: string; // ISO date
-  cleanliness: CleanlinessLevel;
-  noiseLevel: NoiseLevel;
-  sleepSchedule: SleepSchedule;
-  visitFrequency: VisitFrequency;
-  petPreference: PetPreference;
-  smokingPreference: SmokingPreference;
-  remoteWork: boolean;
-  kitchenSharing: KitchenSharing;
-  partyFrequency: PartyFrequency;
-  genderPreference: GenderPreference;
-  couplePreference: CouplePreference;
-  dealbreakers: Dealbreaker[];
-
-  // Space info (si ofrece cuarto)
-  space?: {
-    title: string;
-    description: string;
-    price: number;
-    zone: string;
-    address?: string;
-    photos: string[];
-    rules: string[];
-    available: string; // ISO date
-  };
+  score: number;  // 0-100
+  weight: number; // fracción del total (suma 1.0)
+  icon: string;   // nombre del ícono Lucide
 }
 
 export interface MatchResult {
-  profile: ConvivenceProfile;
-  score: number; // 0-100
-  categoryScores: CategoryScore[];
-  dealbreakersTriggered: DealbreakConflict[];
+  profileId: string;
+  score: number;             // 0-100 redondeado
+  categories: CategoryScore[];
+  hasDealbreaker: boolean;
+  dealbreakersFound: string[]; // descripciones legibles del conflicto
 }
 
-export interface CategoryScore {
-  category: string;
-  label: string;
-  score: number; // 0-100
-  status: "green" | "yellow" | "red";
-  detail: string;
-}
-
-export interface DealbreakConflict {
-  dealbreaker: Dealbreaker;
-  message: string;
+// ─── Par de respuesta de la API ───────────────────────────────────────────────
+export interface MatchPair {
+  profile: SeedProfile;
+  result: MatchResult;
 }
