@@ -146,14 +146,14 @@ export default function ResultsPage() {
           {!loading && !noProfile && !error && matches.length > 0 && (
             <div className="space-y-4">
               {/* Resumen rápido */}
-              <div className="flex items-center gap-4 mb-6 text-sm text-text-secondary">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 mb-6 text-sm text-text-secondary">
                 <span>
                   <strong className="text-text font-mono">
                     {matches.length}
                   </strong>{" "}
                   matches encontrados
                 </span>
-                <span>·</span>
+                <span className="hidden sm:inline">·</span>
                 <span>
                   Mejor score:{" "}
                   <strong

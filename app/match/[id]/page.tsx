@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   ChevronLeft,
@@ -175,12 +176,14 @@ export default function MatchDetailPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex flex-col sm:flex-row gap-5 p-6 rounded-2xl bg-surface border border-border/60 mb-6"
+            className="flex flex-col items-center sm:items-start sm:flex-row gap-5 p-6 rounded-2xl bg-surface border border-border/60 mb-6"
           >
             {/* Avatar */}
-            <img
+            <Image
               src={profile.foto}
               alt={profile.nombre}
+              width={80}
+              height={80}
               className="w-20 h-20 rounded-full object-cover border-2 border-border self-start flex-shrink-0"
             />
 

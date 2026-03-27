@@ -237,7 +237,7 @@ export default function PublishPage() {
                 <select
                   value={barrio}
                   onChange={(e) => setBarrio(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:border-primary/60 focus:outline-none transition-colors text-sm appearance-none"
+                  className="w-full px-4 py-3 rounded-xl bg-surface text-text border border-border focus:border-primary/60 focus:outline-none transition-colors text-sm appearance-none"
                 >
                   <option value="" disabled>
                     Selecciona el barrio

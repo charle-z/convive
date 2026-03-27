@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useInView } from "framer-motion";
 import { MapPin, Briefcase, AlertTriangle, ArrowRight } from "lucide-react";
 import CompatibilityBar from "./CompatibilityBar";
@@ -74,9 +75,11 @@ export default function MatchCard({ profile, result, index }: MatchCardProps) {
       {/* Avatar + score */}
       <div className="flex sm:flex-col items-center gap-4 sm:gap-3 sm:w-24 flex-shrink-0">
         <div className="relative">
-          <img
+          <Image
             src={profile.foto}
             alt={profile.nombre}
+            width={64}
+            height={64}
             className="w-16 h-16 rounded-full object-cover border-2 border-border"
           />
           {/* Score badge sobre avatar */}
