@@ -170,6 +170,9 @@ export default function CompatibilityReceipt({ profile, result, savingsAnnual, o
             <p className="text-sm font-bold" style={{ color: "#00B894" }}>
               {formatCOP(savingsAnnual)} / año
             </p>
+            <p className="text-[10px] text-gray-500">
+              Ajustado por compatibilidad de presupuesto
+            </p>
 
             {/* Footer ticket */}
             <div className="border-t border-dashed border-gray-400 my-2" />

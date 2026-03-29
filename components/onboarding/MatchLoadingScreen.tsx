@@ -13,8 +13,8 @@ const MESSAGES = [
   "¡Tus matches están listos!",
 ];
 
-const TOTAL_MS = 3500;
-const COUNT_MS = 3000;
+const TOTAL_MS = 1200;
+const COUNT_MS = 900;
 
 interface Props {
   onComplete: () => void;
@@ -61,7 +61,7 @@ export default function MatchLoadingScreen({ onComplete }: Props) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg overflow-hidden"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg overflow-hidden pointer-events-none"
     >
       {/* Blob decorativo */}
       <motion.div

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/shared/Navbar";
 import TrafficLight from "@/components/match/TrafficLight";
+import { SEED_PROFILES } from "@/lib/seed-data";
 import { calculateMatch } from "@/lib/matching";
 import type { SeedProfile, ProfileAnswers, MatchResult } from "@/lib/types";
 
@@ -94,29 +95,33 @@ export default function MatchDetailPage() {
     return () => obs.disconnect();
   }, [result]);
 
-  // Fetch + calcular match
+  // Resolver perfil local + calcular match
   useEffect(() => {
     const saved = localStorage.getItem("convive_profile");
-    const userProfile: ProfileAnswers | null = saved
-      ? JSON.parse(saved)
-      : null;
+    let userProfile: ProfileAnswers | null = null;
 
-    fetch("/api/profiles")
-      .then((r) => r.json())
-      .then((data) => {
-        const found: SeedProfile | undefined = data.profiles.find(
-          (p: SeedProfile) => p.id === id
-        );
-        if (!found) { setNotFound(true); setLoading(false); return; }
+    if (saved) {
+      try {
+        userProfile = JSON.parse(saved) as ProfileAnswers;
+      } catch {
+        userProfile = null;
+      }
+    }
 
-        setProfile(found);
+    const found = SEED_PROFILES.find((candidate) => candidate.id === id);
+    if (!found) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
 
-        if (userProfile) {
-          setResult(calculateMatch(userProfile, found));
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    setProfile(found);
+
+    if (userProfile) {
+      setResult(calculateMatch(userProfile, found));
+    }
+
+    setLoading(false);
   }, [id]);
 
   // ── Estados de carga ──

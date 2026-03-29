@@ -457,7 +457,7 @@ export const SEED_PROFILES: SeedProfile[] = [
     edad: 29,
     ocupacion: "Psicóloga",
     barrio: "Tequendama",
-    foto: "https://i.pravatar.cc/150?img=6",
+    foto: "https://i.pravatar.cc/150?img=32",
     descripcion:
       "Empática y tranquila. Me adapto bien pero necesito mis espacios de silencio al llegar del trabajo. Los conflictos me los dices de frente.",
     presupuesto: "600-900",

@@ -23,7 +23,7 @@ const TESTIMONIALS = [
       "Me ahorré $11 millones el año pasado viviendo con alguien compatible. Eso es real.",
     name: "Andrea S.",
     meta: "29 · Psicóloga · San Fernando, Cali",
-    foto: "https://i.pravatar.cc/150?img=6",
+    foto: "https://i.pravatar.cc/150?img=32",
   },
 ];
 

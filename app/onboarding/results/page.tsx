@@ -10,16 +10,54 @@ import MatchCard from "@/components/match/MatchCard";
 import MatchLoadingScreen from "@/components/onboarding/MatchLoadingScreen";
 import CompatibilityReceipt from "@/components/match/CompatibilityReceipt";
 import { getAppUrl } from "@/lib/site-url";
-import type { MatchPair } from "@/lib/types";
+import { SEED_PROFILES } from "@/lib/seed-data";
+import { calculateMatch } from "@/lib/matching";
+import {
+  calculateProjectedAnnualSavings,
+  getBudgetMonthly,
+} from "@/lib/budget";
+import type { MatchPair, ProfileAnswers } from "@/lib/types";
 
 const STEP_LABELS = ["¿Qué buscas?", "Tu perfil", "Tus matches"];
 
-const BUDGET_MONTHLY: Record<string, number> = {
-  "menos-600": 500000,
-  "600-900": 750000,
-  "900-1200": 1050000,
-  "mas-1200": 1500000,
-};
+const MATCHES_CACHE_KEY = "convive_matches_cache";
+
+interface MatchesCache {
+  profileKey: string;
+  matches: MatchPair[];
+  presupuesto: string;
+}
+
+function readMatchesCache(profileKey: string): MatchesCache | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.sessionStorage.getItem(MATCHES_CACHE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<MatchesCache>;
+    if (
+      parsed.profileKey !== profileKey ||
+      !Array.isArray(parsed.matches) ||
+      typeof parsed.presupuesto !== "string"
+    ) {
+      return null;
+    }
+
+    return {
+      profileKey: parsed.profileKey,
+      matches: parsed.matches as MatchPair[],
+      presupuesto: parsed.presupuesto,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeMatchesCache(cache: MatchesCache) {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.setItem(MATCHES_CACHE_KEY, JSON.stringify(cache));
+}
 
 // ─── Skeleton ──────────────────────────────────────────────────────────────
 
@@ -44,13 +82,14 @@ function SkeletonCard() {
 
 // ─── Savings Card ──────────────────────────────────────────────────────────
 
-function SavingsCard({ presupuesto }: { presupuesto: string }) {
+function SavingsCard({
+  savingsAnnual,
+}: {
+  savingsAnnual: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true });
   const [displayed, setDisplayed] = useState(0);
-
-  const monthly = BUDGET_MONTHLY[presupuesto] ?? 750000;
-  const annual = monthly * 12;
 
   useEffect(() => {
     if (!inView) return;
@@ -60,12 +99,12 @@ function SavingsCard({ presupuesto }: { presupuesto: string }) {
     function tick(now: number) {
       const t = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - t, 3);
-      setDisplayed(Math.round(eased * annual));
+      setDisplayed(Math.round(eased * savingsAnnual));
       if (t < 1) raf = requestAnimationFrame(tick);
     }
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [inView, annual]);
+  }, [inView, savingsAnnual]);
 
   const formatted = displayed.toLocaleString("es-CO").replace(/,/g, ".");
 
@@ -99,7 +138,7 @@ function SavingsCard({ presupuesto }: { presupuesto: string }) {
         </p>
         <p className="text-sm text-text-secondary">al año vs vivir solo en Cali</p>
         <p className="text-xs mt-1" style={{ color: "rgba(139,139,163,0.6)" }}>
-          Basado en tu rango de presupuesto · Estimado referencial
+          Ajustado por tu rango de presupuesto y la compatibilidad de tu mejor match
         </p>
       </div>
     </motion.div>
@@ -158,6 +197,9 @@ export default function ResultsPage() {
   const [receiptMatch, setReceiptMatch] = useState<MatchPair | null>(null);
 
   const loading = !animDone || !fetchDone;
+  const topMatchSavingsAnnual = matches[0]
+    ? calculateProjectedAnnualSavings(presupuesto, matches[0].result)
+    : getBudgetMonthly(presupuesto) * 12;
 
   useEffect(() => {
     const saved = localStorage.getItem("convive_profile");
@@ -168,9 +210,9 @@ export default function ResultsPage() {
       return;
     }
 
-    let profile: Record<string, unknown>;
+    let profile: ProfileAnswers;
     try {
-      profile = JSON.parse(saved);
+      profile = JSON.parse(saved) as ProfileAnswers;
     } catch {
       setNoProfile(true);
       setAnimDone(true);
@@ -178,27 +220,41 @@ export default function ResultsPage() {
       return;
     }
 
-    if (profile.presupuesto && typeof profile.presupuesto === "string") {
-      setPresupuesto(profile.presupuesto);
+    const cached = readMatchesCache(saved);
+    if (cached) {
+      setMatches(cached.matches);
+      setPresupuesto(cached.presupuesto);
+      setAnimDone(true);
+      setFetchDone(true);
+      return;
     }
 
-    fetch("/api/match", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile }),
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error("api error");
-        return r.json();
-      })
-      .then((data) => {
-        setMatches(data.matches ?? []);
-        setFetchDone(true);
-      })
-      .catch(() => {
-        setError(true);
-        setFetchDone(true);
+    const presupuestoValue =
+      profile.presupuesto && typeof profile.presupuesto === "string"
+        ? profile.presupuesto
+        : "600-900";
+
+    setPresupuesto(presupuestoValue);
+
+    try {
+      const nextMatches = SEED_PROFILES.map((candidate) => ({
+        profile: candidate,
+        result: calculateMatch(profile, candidate),
+      }))
+        .sort((a, b) => b.result.score - a.result.score)
+        .slice(0, 10);
+
+      setMatches(nextMatches);
+      writeMatchesCache({
+        profileKey: saved,
+        matches: nextMatches,
+        presupuesto: presupuestoValue,
       });
+      setFetchDone(true);
+    } catch {
+      setError(true);
+      setFetchDone(true);
+    }
   }, []);
 
   return (
@@ -216,7 +272,10 @@ export default function ResultsPage() {
           <CompatibilityReceipt
             profile={receiptMatch.profile}
             result={receiptMatch.result}
-            savingsAnnual={(BUDGET_MONTHLY[presupuesto] ?? 750000) * 12}
+            savingsAnnual={calculateProjectedAnnualSavings(
+              presupuesto,
+              receiptMatch.result
+            )}
             onClose={() => setReceiptMatch(null)}
           />
         )}
@@ -316,7 +375,9 @@ export default function ResultsPage() {
               </div>
 
               {/* Card de ahorro */}
-              <SavingsCard presupuesto={presupuesto} />
+              <SavingsCard
+                savingsAnnual={topMatchSavingsAnnual}
+              />
 
               {/* Botón compartir */}
               <ShareButton score={matches[0].result.score} />
