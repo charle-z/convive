@@ -11,7 +11,7 @@ En Colombia, buscar roomie es un acto de fe. Facebook mezcla anuncios sin verifi
 
 ## 🚀 Demo
 
-👉 **[convive en CubePath](URL_AQUI)**
+👉 **[convive en CubePath](https://aqjvkejtr1h6oqnlwrd366sl.144.225.147.58.sslip.io)**
 
 ## 📸 Flujo de la app
 
@@ -99,7 +99,7 @@ convive/
 
 ## 👤 Autor
 
-Desarrollado por **Carlos Alberto Acosta Angulo**
+Desarrollado por **Carlos Acosta**
 Cali, Colombia 🇨🇴
 [LinkedIn](https://www.linkedin.com/in/carlosacosta12)
 
