@@ -24,6 +24,61 @@ import {
 } from "@/lib/intent";
 import type { MatchPair, ProfileAnswers, SearchIntent } from "@/lib/types";
 
+const SPACE_TYPE_LABELS: Record<string, string> = {
+  "cuarto-privado": "Cuarto privado",
+  apartamento: "Apartamento completo",
+  "cuarto-compartido": "Cuarto compartido",
+};
+
+interface SpaceData {
+  spaceType?: string;
+  precio?: string;
+  barrio?: string;
+  descripcion?: string;
+  genero?: string;
+  presupuesto?: string;
+}
+
+function SpaceCard({ data }: { data: SpaceData }) {
+  const label = SPACE_TYPE_LABELS[data.spaceType ?? ""] ?? data.spaceType ?? "Espacio";
+  const precio = data.precio
+    ? `$${Number(data.precio).toLocaleString("es-CO")} /mes`
+    : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="rounded-2xl p-5 mb-6 flex items-start gap-4"
+      style={{
+        backgroundColor: "rgba(108,92,231,0.07)",
+        border: "1px solid rgba(108,92,231,0.25)",
+      }}
+    >
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 text-lg"
+        style={{ backgroundColor: "rgba(108,92,231,0.15)" }}
+      >
+        🏠
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-text-secondary mb-0.5">Tu espacio</p>
+        <p className="font-semibold text-sm">
+          {label}
+          {data.barrio ? ` · ${data.barrio}` : ""}
+          {precio ? ` · ${precio}` : ""}
+        </p>
+        {data.descripcion && (
+          <p className="text-xs text-text-secondary mt-1 line-clamp-2">
+            {data.descripcion}
+          </p>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 const STEP_LABELS: Record<SearchIntent, string[]> = {
   "busco-cuarto": ["¿Qué buscas?", "Tu perfil", "Tus matches"],
   "busco-grupo": ["¿Qué buscas?", "Tu perfil", "Personas compatibles"],
@@ -270,6 +325,7 @@ export default function ResultsPage() {
   const [matches, setMatches] = useState<MatchPair[]>([]);
   const [presupuesto, setPresupuesto] = useState("600-900");
   const [receiptMatch, setReceiptMatch] = useState<MatchPair | null>(null);
+  const [spaceData, setSpaceData] = useState<SpaceData | null>(null);
 
   const copy = RESULTS_COPY[intent];
   const stepLabels = STEP_LABELS[intent];
@@ -281,6 +337,13 @@ export default function ResultsPage() {
   useEffect(() => {
     const storedIntent = normalizeIntent(localStorage.getItem(INTENT_STORAGE_KEY));
     setIntent(storedIntent);
+
+    if (storedIntent === "ofrezco-cuarto") {
+      try {
+        const spaceRaw = localStorage.getItem("convive_space_data");
+        if (spaceRaw) setSpaceData(JSON.parse(spaceRaw) as SpaceData);
+      } catch {}
+    }
 
     const saved = localStorage.getItem("convive_profile");
     if (!saved) {
@@ -417,6 +480,9 @@ export default function ResultsPage() {
 
           {!loading && !noProfile && !error && matches.length > 0 && (
             <div className="space-y-4">
+              {intent === "ofrezco-cuarto" && spaceData && (
+                <SpaceCard data={spaceData} />
+              )}
               <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 mb-4 text-sm text-text-secondary">
                 <span>
                   <strong className="text-text font-mono">{matches.length}</strong>{" "}

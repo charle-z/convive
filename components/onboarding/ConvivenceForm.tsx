@@ -16,6 +16,7 @@ import {
   Heart,
   AlertCircle,
 } from "lucide-react";
+import { INTENT_STORAGE_KEY, normalizeIntent } from "@/lib/intent";
 
 // ─────────────────────────────────────
 // Types
@@ -263,32 +264,78 @@ const slideVariants = {
 // Adaptive question text by intent
 // ─────────────────────────────────────
 
-const OFREZCO_OVERRIDES: Record<string, string> = {
-  presupuesto: "¿Cuánto cobras por el espacio?",
-  zona: "¿En qué zona está tu espacio?",
-  limpieza: "¿Qué nivel de limpieza esperas de tu roomie?",
-  horario: "¿Qué horario prefieres en tu roomie?",
-  ruido: "¿Cuánto ruido toleras en casa?",
-  visitas: "¿Qué tan seguido pueden recibir visitas?",
-  fecha: "¿Para cuándo está disponible el espacio?",
-  fiestas: "¿Permites fiestas o reuniones en el espacio?",
+interface QuestionCopyOverride {
+  question?: string;
+  hint?: string;
+  options?: Record<string, string>;
+}
+
+const OFREZCO_OVERRIDES: Record<string, QuestionCopyOverride> = {
+  presupuesto: { question: "¿Cuánto cobras por el espacio?" },
+  zona: { question: "¿En qué zona está tu espacio?" },
+  limpieza: { question: "¿Qué nivel de limpieza esperas de tu roomie?" },
+  horario: { question: "¿Qué horario prefieres en tu roomie?" },
+  ruido: { question: "¿Cuánto ruido toleras en casa?" },
+  visitas: { question: "¿Qué tan seguido pueden recibir visitas?" },
+  fecha: { question: "¿Para cuándo está disponible el espacio?" },
+  fiestas: { question: "¿Permites fiestas o reuniones en el espacio?" },
 };
 
-const GRUPO_OVERRIDES: Record<string, string> = {
-  presupuesto: "¿Cuánto puede aportar cada persona del grupo?",
-  zona: "¿En qué zona buscan arrendar juntos?",
-  fecha: "¿Para cuándo necesitan el espacio?",
-  fiestas: "¿El grupo planea hacer fiestas seguido?",
+const GRUPO_OVERRIDES: Record<string, QuestionCopyOverride> = {
+  presupuesto: {
+    question: "¿Cuánto podrías aportar al arriendo si armas grupo?",
+  },
+  zona: {
+    question: "¿En qué zona te gustaría arrendar con otras personas?",
+  },
+  fecha: {
+    question: "¿Para cuándo te gustaría armar grupo y mudarte?",
+  },
+  genero: {
+    question: "¿Tienes preferencia de género para las personas con quienes armarías grupo?",
+  },
+  dealbreakers: {
+    question: "¿Hay algo que sea innegociable para ti al armar grupo?",
+    hint: "Puedes elegir varias opciones.",
+  },
 };
+
+function getQuestionOverride(questionId: string, intent: string) {
+  if (intent === "ofrezco-cuarto") {
+    return OFREZCO_OVERRIDES[questionId];
+  }
+
+  if (intent === "busco-grupo") {
+    return GRUPO_OVERRIDES[questionId];
+  }
+
+  return undefined;
+}
 
 function getAdaptedQuestion(question: Question, intent: string): string {
-  if (intent === "ofrezco-cuarto" && OFREZCO_OVERRIDES[question.id]) {
-    return OFREZCO_OVERRIDES[question.id];
+  return getQuestionOverride(question.id, intent)?.question ?? question.question;
+}
+
+function getAdaptedHint(question: Question, intent: string): string | undefined {
+  return getQuestionOverride(question.id, intent)?.hint ?? question.hint;
+}
+
+function getAdaptedOptionLabel(
+  question: Question,
+  option: QuestionOption,
+  intent: string
+): string {
+  return (
+    getQuestionOverride(question.id, intent)?.options?.[option.id] ?? option.label
+  );
+}
+
+function getSubmitLabel(intent: string): string {
+  if (intent === "busco-grupo") {
+    return "Ver personas compatibles";
   }
-  if (intent === "busco-grupo" && GRUPO_OVERRIDES[question.id]) {
-    return GRUPO_OVERRIDES[question.id];
-  }
-  return question.question;
+
+  return "Ver mis matches";
 }
 
 // ─────────────────────────────────────
@@ -305,14 +352,42 @@ export default function ConvivenceForm() {
   // Precargar respuestas e intent guardados
   useEffect(() => {
     if (typeof globalThis.window === "undefined") return;
-    const savedIntent = localStorage.getItem("convive_intent");
-    if (savedIntent) setIntent(savedIntent);
+
+    const savedIntent = normalizeIntent(localStorage.getItem(INTENT_STORAGE_KEY));
+    setIntent(savedIntent);
+
     const saved = localStorage.getItem("convive_profile");
+    let baseAnswers: Answers = {};
     if (saved) {
       try {
-        setAnswers(normalizeAnswers(JSON.parse(saved) as Answers));
+        baseAnswers = normalizeAnswers(JSON.parse(saved) as Answers);
       } catch {}
     }
+
+    // Prefill from space data when offering a room and quiz not yet answered
+    if (savedIntent === "ofrezco-cuarto" && !saved) {
+      try {
+        const spaceRaw = localStorage.getItem("convive_space_data");
+        if (spaceRaw) {
+          const space = JSON.parse(spaceRaw) as {
+            presupuesto?: string;
+            barrio?: string;
+            genero?: string;
+          };
+          const BARRIO_TO_ZONA: Record<string, string> = {
+            Granada: "sur", "El Peñón": "sur", "San Fernando": "sur",
+            "Ciudad Jardín": "sur", Tequendama: "sur",
+            Chipichape: "norte", Centenario: "norte", Menga: "norte", Normandía: "norte",
+            "San Antonio": "centro", Versalles: "centro", "Santa Mónica": "centro", Flora: "centro",
+          };
+          if (space.presupuesto) baseAnswers.presupuesto = space.presupuesto;
+          if (space.barrio) baseAnswers.zona = BARRIO_TO_ZONA[space.barrio] ?? "me-adapto";
+          if (space.genero) baseAnswers.genero = space.genero;
+        }
+      } catch {}
+    }
+
+    if (Object.keys(baseAnswers).length > 0) setAnswers(baseAnswers);
   }, []);
 
   const question = QUESTIONS[page];
@@ -417,8 +492,10 @@ export default function ConvivenceForm() {
               <h2 className="text-2xl sm:text-3xl font-bold leading-snug">
                 {getAdaptedQuestion(question, intent)}
               </h2>
-              {question.hint && (
-                <p className="mt-2 text-sm text-text-secondary">{question.hint}</p>
+              {getAdaptedHint(question, intent) && (
+                <p className="mt-2 text-sm text-text-secondary">
+                  {getAdaptedHint(question, intent)}
+                </p>
               )}
             </div>
 
@@ -479,7 +556,7 @@ export default function ConvivenceForm() {
                     <span
                       className={`text-sm font-medium leading-snug block transition-colors duration-150 text-text ${isMulti ? "pr-6" : ""}`}
                     >
-                      {opt.label}
+                      {getAdaptedOptionLabel(question, opt, intent)}
                     </span>
                   </button>
                 );
@@ -514,7 +591,7 @@ export default function ConvivenceForm() {
               : "bg-surface-hover text-text-secondary/40 cursor-not-allowed"
           }`}
         >
-          {isLast ? "Ver mis matches" : "Siguiente"}
+          {isLast ? getSubmitLabel(intent) : "Siguiente"}
           <ArrowRight
             className={`w-4 h-4 transition-transform ${
               hasAnswer ? "group-hover:translate-x-1" : ""

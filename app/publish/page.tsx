@@ -381,7 +381,7 @@ export default function PublishPage() {
                     : "var(--surface-hover)",
                 }}
               >
-                Publicar espacio →
+                Encontrar roomie para mi espacio →
               </button>
               {!canSubmit && (
                 <p className="text-center text-xs text-text-secondary mt-2">
