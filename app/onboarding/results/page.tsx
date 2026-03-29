@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { DollarSign, Share2 } from "lucide-react";
 import Navbar from "@/components/shared/Navbar";
@@ -16,10 +17,18 @@ import {
   calculateProjectedAnnualSavings,
   getBudgetMonthly,
 } from "@/lib/budget";
-import type { MatchPair, ProfileAnswers } from "@/lib/types";
+import {
+  DEFAULT_INTENT,
+  INTENT_STORAGE_KEY,
+  normalizeIntent,
+} from "@/lib/intent";
+import type { MatchPair, ProfileAnswers, SearchIntent } from "@/lib/types";
 
-const STEP_LABELS = ["¿Qué buscas?", "Tu perfil", "Tus matches"];
-
+const STEP_LABELS: Record<SearchIntent, string[]> = {
+  "busco-cuarto": ["¿Qué buscas?", "Tu perfil", "Tus matches"],
+  "busco-grupo": ["¿Qué buscas?", "Tu perfil", "Personas compatibles"],
+  "ofrezco-cuarto": ["¿Qué buscas?", "Tu perfil", "Tus matches"],
+};
 const MATCHES_CACHE_KEY = "convive_matches_cache";
 
 interface MatchesCache {
@@ -27,6 +36,69 @@ interface MatchesCache {
   matches: MatchPair[];
   presupuesto: string;
 }
+
+const RESULTS_COPY: Record<
+  SearchIntent,
+  {
+    title: string;
+    description: string;
+    noProfileTitle: string;
+    noProfileDescription: string;
+    completeProfileLabel: string;
+    adjustLabel: string;
+    summaryLabel: string;
+    shareText: (score: number) => string;
+    savingsLabel: string;
+    savingsNote: string;
+  }
+> = {
+  "busco-cuarto": {
+    title: "Tus matches en Cali",
+    description: "Ordenados por compatibilidad real, no por quién pagó más.",
+    noProfileTitle: "Primero completa tu perfil",
+    noProfileDescription:
+      "Necesitamos saber más de ti para mostrarte matches compatibles.",
+    completeProfileLabel: "Completar perfil",
+    adjustLabel: "← Ajustar mi perfil",
+    summaryLabel: "matches encontrados",
+    shareText: (score) =>
+      `Encontré mi roomie ideal en Convive 🏠\nMi mejor match tiene ${score}% de compatibilidad.\n¿Cuál es el tuyo? → ${getAppUrl()}`,
+    savingsLabel: "Tu ahorro estimado viviendo con un roomie compatible",
+    savingsNote:
+      "Ajustado por tu rango de presupuesto y la compatibilidad de tu mejor match",
+  },
+  "busco-grupo": {
+    title: "Personas compatibles para armar grupo contigo",
+    description:
+      "Ordenadas por compatibilidad real para encontrar con quién arrendar juntos.",
+    noProfileTitle: "Primero completa tu perfil",
+    noProfileDescription:
+      "Necesitamos saber cómo te gustaría vivir para mostrarte personas compatibles.",
+    completeProfileLabel: "Completar perfil",
+    adjustLabel: "← Ajustar mi perfil",
+    summaryLabel: "personas compatibles encontradas",
+    shareText: (score) =>
+      `Encontré personas compatibles para armar grupo en Convive 🏠\nMi mejor compatibilidad tiene ${score}%.\n¿Cuál es la tuya? → ${getAppUrl()}`,
+    savingsLabel: "Tu ahorro estimado si armas grupo con personas compatibles",
+    savingsNote:
+      "Ajustado por tu rango de presupuesto y la compatibilidad de tu mejor match",
+  },
+  "ofrezco-cuarto": {
+    title: "Personas compatibles para tu espacio",
+    description: "Ordenadas por compatibilidad real de convivencia con tu perfil.",
+    noProfileTitle: "Primero define tu perfil",
+    noProfileDescription:
+      "Necesitamos saber cómo eres para encontrar el roomie ideal para tu espacio.",
+    completeProfileLabel: "Definir mi perfil",
+    adjustLabel: "← Ajustar mi perfil",
+    summaryLabel: "personas compatibles encontradas",
+    shareText: (score) =>
+      `Encontré el roomie ideal para mi espacio en Convive 🏠\nMi mejor match tiene ${score}% de compatibilidad.\n¿Encontrás el tuyo? → ${getAppUrl()}`,
+    savingsLabel: "Ahorro estimado al vivir con un roomie compatible",
+    savingsNote:
+      "Basado en el aporte esperado del roomie y la compatibilidad de presupuesto",
+  },
+};
 
 function readMatchesCache(profileKey: string): MatchesCache | null {
   if (typeof window === "undefined") return null;
@@ -59,8 +131,6 @@ function writeMatchesCache(cache: MatchesCache) {
   window.sessionStorage.setItem(MATCHES_CACHE_KEY, JSON.stringify(cache));
 }
 
-// ─── Skeleton ──────────────────────────────────────────────────────────────
-
 function SkeletonCard() {
   return (
     <div className="flex gap-5 p-5 rounded-2xl bg-surface border border-border/60 animate-pulse">
@@ -80,12 +150,14 @@ function SkeletonCard() {
   );
 }
 
-// ─── Savings Card ──────────────────────────────────────────────────────────
-
 function SavingsCard({
   savingsAnnual,
+  label,
+  note,
 }: {
   savingsAnnual: number;
+  label: string;
+  note: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true });
@@ -96,12 +168,14 @@ function SavingsCard({
     const start = performance.now();
     const duration = 1400;
     let raf: number;
+
     function tick(now: number) {
       const t = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - t, 3);
       setDisplayed(Math.round(eased * savingsAnnual));
       if (t < 1) raf = requestAnimationFrame(tick);
     }
+
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [inView, savingsAnnual]);
@@ -127,9 +201,7 @@ function SavingsCard({
         <DollarSign className="w-5 h-5" style={{ color: "var(--success)" }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-text-secondary mb-1">
-          Tu ahorro estimado viviendo con un roomie compatible
-        </p>
+        <p className="text-xs text-text-secondary mb-1">{label}</p>
         <p
           className="text-3xl font-bold font-mono leading-none mb-1"
           style={{ color: "var(--success)" }}
@@ -138,26 +210,31 @@ function SavingsCard({
         </p>
         <p className="text-sm text-text-secondary">al año vs vivir solo en Cali</p>
         <p className="text-xs mt-1" style={{ color: "rgba(139,139,163,0.6)" }}>
-          Ajustado por tu rango de presupuesto y la compatibilidad de tu mejor match
+          {note}
         </p>
       </div>
     </motion.div>
   );
 }
 
-// ─── Share Button ──────────────────────────────────────────────────────────
-
-function ShareButton({ score }: { score: number }) {
+function ShareButton({
+  score,
+  shareText,
+}: {
+  score: number;
+  shareText: (score: number) => string;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
-    const text = `Encontré mi roomie ideal en Convive 🏠\nMi mejor match tiene ${score}% de compatibilidad.\n¿Cuál es el tuyo? → ${getAppUrl()}`;
+    const text = shareText(score);
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({ text });
         return;
       } catch {}
     }
+
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -184,24 +261,27 @@ function ShareButton({ score }: { score: number }) {
   );
 }
 
-// ─── Page ──────────────────────────────────────────────────────────────────
-
 export default function ResultsPage() {
-  // Two independent flags that must both be true before showing results
+  const [intent, setIntent] = useState<SearchIntent>(DEFAULT_INTENT);
   const [animDone, setAnimDone] = useState(false);
   const [fetchDone, setFetchDone] = useState(false);
   const [noProfile, setNoProfile] = useState(false);
   const [error, setError] = useState(false);
   const [matches, setMatches] = useState<MatchPair[]>([]);
-  const [presupuesto, setPresupuesto] = useState<string>("600-900");
+  const [presupuesto, setPresupuesto] = useState("600-900");
   const [receiptMatch, setReceiptMatch] = useState<MatchPair | null>(null);
 
+  const copy = RESULTS_COPY[intent];
+  const stepLabels = STEP_LABELS[intent];
   const loading = !animDone || !fetchDone;
   const topMatchSavingsAnnual = matches[0]
     ? calculateProjectedAnnualSavings(presupuesto, matches[0].result)
     : getBudgetMonthly(presupuesto) * 12;
 
   useEffect(() => {
+    const storedIntent = normalizeIntent(localStorage.getItem(INTENT_STORAGE_KEY));
+    setIntent(storedIntent);
+
     const saved = localStorage.getItem("convive_profile");
     if (!saved) {
       setNoProfile(true);
@@ -230,9 +310,7 @@ export default function ResultsPage() {
     }
 
     const presupuestoValue =
-      profile.presupuesto && typeof profile.presupuesto === "string"
-        ? profile.presupuesto
-        : "600-900";
+      typeof profile.presupuesto === "string" ? profile.presupuesto : "600-900";
 
     setPresupuesto(presupuestoValue);
 
@@ -259,14 +337,12 @@ export default function ResultsPage() {
 
   return (
     <>
-      {/* Loading screen */}
       <AnimatePresence>
         {!noProfile && !animDone && (
           <MatchLoadingScreen onComplete={() => setAnimDone(true)} />
         )}
       </AnimatePresence>
 
-      {/* Receipt modal */}
       <AnimatePresence>
         {receiptMatch && (
           <CompatibilityReceipt
@@ -284,12 +360,10 @@ export default function ResultsPage() {
       <Navbar />
       <main className="min-h-screen bg-bg pt-24 pb-16 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto">
-          {/* Step indicator */}
           <div className="mb-12">
-            <StepIndicator currentStep={3} labels={STEP_LABELS} />
+            <StepIndicator currentStep={3} labels={stepLabels} />
           </div>
 
-          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -297,31 +371,27 @@ export default function ResultsPage() {
             className="mb-8"
           >
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Tus matches en Cali
+              {copy.title}
             </h1>
-            <p className="mt-2 text-text-secondary">
-              Ordenados por compatibilidad real, no por quién pagó más.
-            </p>
+            <p className="mt-2 text-text-secondary">{copy.description}</p>
           </motion.div>
 
-          {/* Sin perfil */}
           {noProfile && (
             <div className="text-center py-16 flex flex-col items-center gap-4">
               <p className="text-2xl">🏠</p>
-              <p className="text-lg font-semibold">Primero completa tu perfil</p>
+              <p className="text-lg font-semibold">{copy.noProfileTitle}</p>
               <p className="text-text-secondary text-sm">
-                Necesitamos saber más de ti para mostrarte matches compatibles.
+                {copy.noProfileDescription}
               </p>
               <Link
                 href="/onboarding"
                 className="mt-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary-light text-white font-semibold text-sm transition-colors"
               >
-                Completar perfil
+                {copy.completeProfileLabel}
               </Link>
             </div>
           )}
 
-          {/* Error */}
           {error && (
             <div className="text-center py-16 flex flex-col items-center gap-3">
               <p className="text-lg font-semibold text-danger">Algo salió mal</p>
@@ -337,7 +407,6 @@ export default function ResultsPage() {
             </div>
           )}
 
-          {/* Skeleton: after animation but fetch still running */}
           {animDone && !fetchDone && !noProfile && (
             <div className="space-y-4">
               {[...Array(4)].map((_, i) => (
@@ -346,14 +415,12 @@ export default function ResultsPage() {
             </div>
           )}
 
-          {/* Resultados */}
           {!loading && !noProfile && !error && matches.length > 0 && (
             <div className="space-y-4">
-              {/* Resumen rápido */}
               <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 mb-4 text-sm text-text-secondary">
                 <span>
                   <strong className="text-text font-mono">{matches.length}</strong>{" "}
-                  matches encontrados
+                  {copy.summaryLabel}
                 </span>
                 <span className="hidden sm:inline">·</span>
                 <span>
@@ -374,21 +441,20 @@ export default function ResultsPage() {
                 </span>
               </div>
 
-              {/* Card de ahorro */}
               <SavingsCard
                 savingsAnnual={topMatchSavingsAnnual}
+                label={copy.savingsLabel}
+                note={copy.savingsNote}
               />
 
-              {/* Botón compartir */}
-              <ShareButton score={matches[0].result.score} />
+              <ShareButton
+                score={matches[0].result.score}
+                shareText={copy.shareText}
+              />
 
               {matches.map(({ profile, result }, i) => (
                 <div key={profile.id}>
-                  <MatchCard
-                    profile={profile}
-                    result={result}
-                    index={i}
-                  />
+                  <MatchCard profile={profile} result={result} index={i} />
                   <div className="flex justify-end mt-1 mb-3">
                     <button
                       onClick={() => setReceiptMatch({ profile, result })}
@@ -400,19 +466,17 @@ export default function ResultsPage() {
                 </div>
               ))}
 
-              {/* CTA al final */}
               <div className="pt-6 text-center">
                 <Link
                   href="/onboarding/profile"
                   className="text-sm text-text-secondary hover:text-text transition-colors"
                 >
-                  ← Ajustar mi perfil
+                  {copy.adjustLabel}
                 </Link>
               </div>
             </div>
           )}
 
-          {/* Sin resultados */}
           {!loading && !noProfile && !error && matches.length === 0 && (
             <div className="text-center py-16">
               <p className="text-lg font-semibold">Sin matches por ahora</p>

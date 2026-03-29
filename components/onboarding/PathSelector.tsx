@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Home, Users, Check, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { SearchIntent } from "@/lib/types";
+import { INTENT_STORAGE_KEY, normalizeIntent } from "@/lib/intent";
 
 const OPTIONS: {
   id: SearchIntent;
@@ -22,16 +23,16 @@ const OPTIONS: {
   {
     id: "ofrezco-cuarto",
     Icon: Home,
-    title: "Ofrezco mi espacio",
+    title: "Tengo un espacio disponible",
     description:
-      "Tengo un cuarto disponible y busco al roomie ideal.",
+      "Quiero encontrar el roomie ideal para mi cuarto o apartamento.",
   },
   {
     id: "busco-grupo",
     Icon: Users,
-    title: "Busco grupo para arrendar",
+    title: "Quiero armar grupo",
     description:
-      "Quiero armar un grupo para alquilar un apartamento juntos.",
+      "Busco personas compatibles para arrendar un apartamento juntos.",
   },
 ];
 
@@ -53,17 +54,32 @@ export default function PathSelector() {
   const [selected, setSelected] = useState<SearchIntent | null>(null);
   const router = useRouter();
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const storedIntent = window.localStorage.getItem(INTENT_STORAGE_KEY);
+    if (storedIntent) {
+      setSelected(normalizeIntent(storedIntent));
+    }
+  }, []);
+
   const handleSelect = (id: SearchIntent) => {
     setSelected(id);
     if (typeof window !== "undefined") {
-      localStorage.setItem("convive_intent", id);
+      localStorage.setItem(INTENT_STORAGE_KEY, id);
     }
   };
 
   const handleContinue = () => {
     if (!selected) return;
-    router.push("/onboarding/profile");
+    router.push(selected === "ofrezco-cuarto" ? "/publish" : "/onboarding/profile");
   };
+
+  const continueLabel =
+    selected === "ofrezco-cuarto"
+      ? "Describir mi espacio"
+      : selected === "busco-grupo"
+      ? "Crear mi perfil"
+      : "Continuar";
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -155,7 +171,7 @@ export default function PathSelector() {
               onClick={handleContinue}
               className="group w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-primary hover:bg-primary-light text-white font-semibold text-base transition-all duration-200 hover:shadow-lg hover:shadow-primary/30"
             >
-              Continuar
+              {continueLabel}
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
           </motion.div>

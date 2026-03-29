@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Home, Building2, Users, CheckSquare, Square } from "lucide-react";
+import { Home, Building2, Users, CheckSquare, Square, ArrowRight } from "lucide-react";
 import Navbar from "@/components/shared/Navbar";
+import { INTENT_STORAGE_KEY } from "@/lib/intent";
 
 // ─── Datos ──────────────────────────────────────────────────────────────────
 
@@ -41,66 +42,36 @@ const REGLAS = [
   { id: "aviso-visitas", label: "Aviso previo para visitas" },
 ];
 
-// ─── SVG checkmark animado ──────────────────────────────────────────────────
+// ─── Pantalla puente ─────────────────────────────────────────────────────────
 
-function AnimatedCheck() {
-  return (
-    <motion.svg
-      width="80"
-      height="80"
-      viewBox="0 0 80 80"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <motion.circle
-        cx="40"
-        cy="40"
-        r="36"
-        stroke="var(--success)"
-        strokeWidth="4"
-        fill="none"
-        initial={{ pathLength: 0, opacity: 0 }}
-        animate={{ pathLength: 1, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      />
-      <motion.path
-        d="M24 40 L35 52 L56 28"
-        stroke="var(--success)"
-        strokeWidth="4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-        initial={{ pathLength: 0, opacity: 0 }}
-        animate={{ pathLength: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut", delay: 0.5 }}
-      />
-    </motion.svg>
-  );
-}
-
-// ─── Pantalla de éxito ──────────────────────────────────────────────────────
-
-function SuccessScreen() {
+function BridgeScreen({ onContinue }: { onContinue: () => void }) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col items-center justify-center text-center py-20 gap-6"
     >
-      <AnimatedCheck />
+      <div
+        className="w-16 h-16 rounded-2xl flex items-center justify-center"
+        style={{ backgroundColor: "rgba(108,92,231,0.15)", border: "1px solid rgba(108,92,231,0.3)" }}
+      >
+        <Home className="w-8 h-8" style={{ color: "var(--primary-light)" }} />
+      </div>
       <div>
-        <h2 className="text-2xl font-bold mt-2">¡Tu espacio fue publicado!</h2>
+        <h2 className="text-2xl font-bold">Tu espacio está listo.</h2>
         <p className="text-text-secondary mt-2 max-w-sm mx-auto">
-          Empezaremos a mostrar tu perfil a roomies compatibles en Cali.
+          Ahora cuéntanos cómo eres como persona para encontrar al roomie más compatible con tu espacio.
         </p>
       </div>
-      <Link
-        href="/onboarding"
-        className="mt-2 px-8 py-3.5 rounded-xl bg-primary hover:bg-primary-light text-white font-semibold transition-colors"
+      <button
+        onClick={onContinue}
+        className="group flex items-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+        style={{ background: "linear-gradient(135deg, var(--primary), #8B7CF6)" }}
       >
-        Ver mis matches
-      </Link>
+        Definir mi perfil de convivencia
+        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+      </button>
     </motion.div>
   );
 }
@@ -108,6 +79,7 @@ function SuccessScreen() {
 // ─── Página ─────────────────────────────────────────────────────────────────
 
 export default function PublishPage() {
+  const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
 
   // Sección 1
@@ -121,6 +93,11 @@ export default function PublishPage() {
   const [presupuesto, setPresupuesto] = useState<string | null>(null);
   const [reglas, setReglas] = useState<string[]>([]);
 
+  // Asegurar intent correcto al entrar a esta página
+  useEffect(() => {
+    localStorage.setItem(INTENT_STORAGE_KEY, "ofrezco-cuarto");
+  }, []);
+
   function toggleRegla(id: string) {
     setReglas((prev) =>
       prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
@@ -129,6 +106,11 @@ export default function PublishPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Guardar datos del espacio en localStorage para referencia
+    localStorage.setItem(
+      "convive_space_data",
+      JSON.stringify({ spaceType, precio, barrio, descripcion, genero, presupuesto, reglas })
+    );
     setSubmitted(true);
   }
 
@@ -140,7 +122,7 @@ export default function PublishPage() {
         <Navbar />
         <main className="min-h-screen bg-bg pt-24 pb-16 px-4 sm:px-6">
           <div className="max-w-2xl mx-auto">
-            <SuccessScreen />
+            <BridgeScreen onContinue={() => router.push("/onboarding/profile")} />
           </div>
         </main>
       </>
@@ -160,10 +142,10 @@ export default function PublishPage() {
             className="mb-10"
           >
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Publicar un espacio
+              Describe tu espacio
             </h1>
             <p className="mt-2 text-text-secondary">
-              Cuéntanos sobre tu lugar y lo que buscas en un roomie.
+              Paso 1 de 2 — Cuéntanos qué ofreces y qué necesitas en un roomie.
             </p>
           </motion.div>
 

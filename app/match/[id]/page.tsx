@@ -11,6 +11,7 @@ import {
   MapPin,
   Briefcase,
   MessageCircle,
+  Handshake,
 } from "lucide-react";
 import Navbar from "@/components/shared/Navbar";
 import TrafficLight from "@/components/match/TrafficLight";
@@ -153,6 +154,27 @@ export default function MatchDetailPage() {
   const sortedCategories = result
     ? [...result.categories].sort((a, b) => b.score - a.score)
     : [];
+
+  // ── Pacto sugerido ──────────────────────────────────────────────────────────
+  function getSuggestedPact(r: NonNullable<typeof result>): string[] {
+    const m = Object.fromEntries(r.categories.map((c) => [c.name, c.score]));
+    const pacts: string[] = [];
+    if ((m["Limpieza"] ?? 100) < 65)
+      pacts.push("Definir un estándar mínimo de limpieza y días fijos para áreas comunes.");
+    if ((m["Ruido"] ?? 100) < 65)
+      pacts.push("Acordar un horario de silencio, especialmente en las noches.");
+    if ((m["Visitas"] ?? 100) < 65)
+      pacts.push("Avisar con anticipación para visitas y pactar una frecuencia máxima.");
+    if ((m["Horario"] ?? 100) < 65)
+      pacts.push("Respetar el descanso según los horarios habituales de cada uno.");
+    if ((m["Fiestas"] ?? 100) < 65)
+      pacts.push("Establecer cuántas reuniones al mes son aceptables y con cuánto aviso.");
+    if ((m["Gastos"] ?? 100) < 65)
+      pacts.push("Acordar desde el día 1 cómo se dividen y pagan los servicios.");
+    if (pacts.length === 0)
+      pacts.push("Alta compatibilidad. Igual conversen sobre expectativas antes de mudarse.");
+    return pacts.slice(0, 3);
+  }
 
   const tags = [
     { label: BUDGET_LABELS[profile.presupuesto] ?? profile.presupuesto },
@@ -342,6 +364,38 @@ export default function MatchDetailPage() {
               ))}
             </div>
           </motion.section>
+
+          {/* ── Pacto de convivencia sugerido ── */}
+          {result && (
+            <motion.section
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.48 }}
+              className="mb-8 p-5 rounded-2xl border border-border/60"
+              style={{ backgroundColor: "rgba(108,92,231,0.06)" }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Handshake className="w-4 h-4" style={{ color: "var(--primary-light)" }} />
+                <h2 className="text-base font-semibold">Pacto de convivencia sugerido</h2>
+              </div>
+              <p className="text-xs text-text-secondary mb-3">
+                Basado en sus diferencias, estos son los puntos que deberían acordar antes de mudarse:
+              </p>
+              <ul className="space-y-2">
+                {getSuggestedPact(result).map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-text-secondary">
+                    <span
+                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5"
+                      style={{ backgroundColor: "rgba(108,92,231,0.15)", color: "var(--primary-light)" }}
+                    >
+                      {i + 1}
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </motion.section>
+          )}
 
           {/* ── CTA WhatsApp ── */}
           <motion.div
