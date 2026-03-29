@@ -331,7 +331,7 @@ function getAdaptedOptionLabel(
 }
 
 function getSubmitLabel(intent: string): string {
-  if (intent === "busco-grupo") {
+  if (intent === "busco-grupo" || intent === "ofrezco-cuarto") {
     return "Ver personas compatibles";
   }
 

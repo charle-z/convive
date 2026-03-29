@@ -82,7 +82,7 @@ function SpaceCard({ data }: { data: SpaceData }) {
 const STEP_LABELS: Record<SearchIntent, string[]> = {
   "busco-cuarto": ["¿Qué buscas?", "Tu perfil", "Tus matches"],
   "busco-grupo": ["¿Qué buscas?", "Tu perfil", "Personas compatibles"],
-  "ofrezco-cuarto": ["¿Qué buscas?", "Tu perfil", "Tus matches"],
+  "ofrezco-cuarto": ["Tu espacio", "Tu perfil", "Personas compatibles"],
 };
 const MATCHES_CACHE_KEY = "convive_matches_cache";
 
