@@ -238,15 +238,54 @@ const slideVariants = {
 // Component
 // ─────────────────────────────────────
 
+// ─────────────────────────────────────
+// Adaptive question text by intent
+// ─────────────────────────────────────
+
+const OFREZCO_OVERRIDES: Record<string, string> = {
+  presupuesto: "¿Cuánto cobras por el espacio?",
+  zona: "¿En qué zona está tu espacio?",
+  limpieza: "¿Qué nivel de limpieza esperas de tu roomie?",
+  horario: "¿Qué horario prefieres en tu roomie?",
+  ruido: "¿Cuánto ruido toleras en casa?",
+  visitas: "¿Qué tan seguido pueden recibir visitas?",
+  fecha: "¿Para cuándo está disponible el espacio?",
+  fiestas: "¿Permites fiestas o reuniones en el espacio?",
+};
+
+const GRUPO_OVERRIDES: Record<string, string> = {
+  presupuesto: "¿Cuánto puede aportar cada persona del grupo?",
+  zona: "¿En qué zona buscan arrendar juntos?",
+  fecha: "¿Para cuándo necesitan el espacio?",
+  fiestas: "¿El grupo planea hacer fiestas seguido?",
+};
+
+function getAdaptedQuestion(question: Question, intent: string): string {
+  if (intent === "ofrezco-cuarto" && OFREZCO_OVERRIDES[question.id]) {
+    return OFREZCO_OVERRIDES[question.id];
+  }
+  if (intent === "busco-grupo" && GRUPO_OVERRIDES[question.id]) {
+    return GRUPO_OVERRIDES[question.id];
+  }
+  return question.question;
+}
+
+// ─────────────────────────────────────
+// Component
+// ─────────────────────────────────────
+
 export default function ConvivenceForm() {
   const router = useRouter();
   const [page, setPage] = useState(0);
   const [direction, setDirection] = useState(1);
   const [answers, setAnswers] = useState<Answers>({});
+  const [intent, setIntent] = useState<string>("busco-cuarto");
 
-  // Precargar respuestas guardadas
+  // Precargar respuestas e intent guardados
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof globalThis.window === "undefined") return;
+    const savedIntent = localStorage.getItem("convive_intent");
+    if (savedIntent) setIntent(savedIntent);
     const saved = localStorage.getItem("convive_profile");
     if (saved) {
       try {
@@ -283,7 +322,7 @@ export default function ConvivenceForm() {
   const goNext = () => {
     if (!hasAnswer) return;
     if (isLast) {
-      if (typeof window !== "undefined") {
+      if (typeof globalThis.window !== "undefined") {
         localStorage.setItem("convive_profile", JSON.stringify(answers));
       }
       router.push("/onboarding/results");
@@ -340,7 +379,7 @@ export default function ConvivenceForm() {
             {/* Pregunta */}
             <div className="mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold leading-snug">
-                {question.question}
+                {getAdaptedQuestion(question, intent)}
               </h2>
               {question.hint && (
                 <p className="mt-2 text-sm text-text-secondary">{question.hint}</p>
@@ -402,9 +441,7 @@ export default function ConvivenceForm() {
                     )}
 
                     <span
-                      className={`text-sm font-medium leading-snug block transition-colors duration-150 ${
-                        selected ? "text-text" : "text-text"
-                      } ${isMulti ? "pr-6" : ""}`}
+                      className={`text-sm font-medium leading-snug block transition-colors duration-150 text-text ${isMulti ? "pr-6" : ""}`}
                     >
                       {opt.label}
                     </span>

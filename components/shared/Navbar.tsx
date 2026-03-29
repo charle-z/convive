@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Home } from "lucide-react";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const isLanding = pathname === "/";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -37,21 +40,23 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Nav links — ocultos en mobile */}
-        <nav className="hidden md:flex items-center gap-6">
-          <a
-            href="#como-funciona"
-            className="text-sm text-text-secondary hover:text-text transition-colors"
-          >
-            Cómo funciona
-          </a>
-          <a
-            href="#features"
-            className="text-sm text-text-secondary hover:text-text transition-colors"
-          >
-            Por qué Convive
-          </a>
-        </nav>
+        {/* Nav links — solo en landing, ocultos en mobile */}
+        {isLanding && (
+          <nav className="hidden md:flex items-center gap-6">
+            <Link
+              href="/como-funciona"
+              className="text-sm text-text-secondary hover:text-text transition-colors"
+            >
+              Cómo funciona
+            </Link>
+            <Link
+              href="/por-que-convive"
+              className="text-sm text-text-secondary hover:text-text transition-colors"
+            >
+              Por qué Convive
+            </Link>
+          </nav>
+        )}
 
         {/* CTA */}
         <Link

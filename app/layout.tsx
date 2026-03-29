@@ -18,11 +18,14 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: "Convive — Elige con quién vivir",
   description:
-    "Plataforma de compatibilidad para convivencia compartida. Encuentra roomies compatibles, no solo disponibles.",
+    "Motor de compatibilidad para roomies en Cali. Encuentra con quién sí y con quién no deberías vivir, antes de mudarte.",
   openGraph: {
     title: "Convive — Elige con quién vivir",
     description:
-      "Motor de matching que te dice con quién sí y con quién NO deberías vivir, antes de mudarte.",
+      "Motor de compatibilidad para roomies en Cali. Sin registro. Sin intermediarios.",
+    url: "http://aqjvkejtr1h6oqnlwrd366sl.144.225.147.58.sslip.io",
+    siteName: "Convive",
+    locale: "es_CO",
     type: "website",
   },
 };
