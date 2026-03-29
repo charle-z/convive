@@ -213,6 +213,27 @@ const QUESTIONS: Question[] = [
   },
 ];
 
+const NONE_DEALBREAKER_ID = "ninguno";
+
+function normalizeDealbreakers(value: AnswerValue | undefined): string[] {
+  const items = Array.isArray(value)
+    ? Array.from(new Set(value.filter((item): item is string => typeof item === "string")))
+    : [];
+
+  if (items.includes(NONE_DEALBREAKER_ID) && items.length > 1) {
+    return items.filter((item) => item !== NONE_DEALBREAKER_ID);
+  }
+
+  return items;
+}
+
+function normalizeAnswers(savedAnswers: Answers): Answers {
+  return {
+    ...savedAnswers,
+    dealbreakers: normalizeDealbreakers(savedAnswers.dealbreakers),
+  };
+}
+
 // ─────────────────────────────────────
 // Animation variants
 // ─────────────────────────────────────
@@ -289,7 +310,7 @@ export default function ConvivenceForm() {
     const saved = localStorage.getItem("convive_profile");
     if (saved) {
       try {
-        setAnswers(JSON.parse(saved));
+        setAnswers(normalizeAnswers(JSON.parse(saved) as Answers));
       } catch {}
     }
   }, []);
@@ -312,18 +333,33 @@ export default function ConvivenceForm() {
   };
 
   const handleMulti = (optId: string) => {
-    const current = (answers[question.id] as string[]) ?? [];
-    const updated = current.includes(optId)
-      ? current.filter((id) => id !== optId)
-      : [...current, optId];
+    const current = normalizeDealbreakers(answers[question.id]);
+
+    let updated: string[];
+    if (question.id === "dealbreakers") {
+      if (optId === NONE_DEALBREAKER_ID) {
+        updated = current.includes(NONE_DEALBREAKER_ID) ? [] : [NONE_DEALBREAKER_ID];
+      } else if (current.includes(optId)) {
+        updated = current.filter((id) => id !== optId);
+      } else {
+        updated = [...current.filter((id) => id !== NONE_DEALBREAKER_ID), optId];
+      }
+    } else {
+      updated = current.includes(optId)
+        ? current.filter((id) => id !== optId)
+        : [...current, optId];
+    }
+
     setAnswers((prev) => ({ ...prev, [question.id]: updated }));
   };
 
   const goNext = () => {
     if (!hasAnswer) return;
     if (isLast) {
+      const normalizedAnswers = normalizeAnswers(answers);
+      setAnswers(normalizedAnswers);
       if (typeof globalThis.window !== "undefined") {
-        localStorage.setItem("convive_profile", JSON.stringify(answers));
+        localStorage.setItem("convive_profile", JSON.stringify(normalizedAnswers));
       }
       router.push("/onboarding/results");
       return;
