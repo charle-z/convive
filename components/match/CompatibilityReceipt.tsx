@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type { SeedProfile, MatchResult } from "@/lib/types";
+import { getAppUrl } from "@/lib/site-url";
 
 interface Props {
   profile: SeedProfile;
@@ -82,7 +83,7 @@ export default function CompatibilityReceipt({ profile, result, savingsAnnual, o
     `"Elige con quién vivir."`,
     `convive · Cali, Colombia`,
     ``,
-    `¿Cuál es tu match? → http://aqjvkejtr1h6oqnlwrd366sl.144.225.147.58.sslip.io`,
+    `¿Cuál es tu match? → ${getAppUrl()}`,
   ].join("\n");
 
   async function handleCopy() {

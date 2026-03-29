@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Space_Mono } from "next/font/google";
 import "./globals.css";
+import { DEFAULT_APP_URL } from "@/lib/site-url";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -16,6 +17,7 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(DEFAULT_APP_URL),
   title: "Convive — Elige con quién vivir",
   description:
     "Motor de compatibilidad para roomies en Cali. Encuentra con quién sí y con quién no deberías vivir, antes de mudarte.",
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
     title: "Convive — Elige con quién vivir",
     description:
       "Motor de compatibilidad para roomies en Cali. Sin registro. Sin intermediarios.",
-    url: "http://aqjvkejtr1h6oqnlwrd366sl.144.225.147.58.sslip.io",
+    url: DEFAULT_APP_URL,
     siteName: "Convive",
     locale: "es_CO",
     type: "website",

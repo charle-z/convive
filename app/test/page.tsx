@@ -4,8 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home } from "lucide-react";
-
-const APP_URL = "http://aqjvkejtr1h6oqnlwrd366sl.144.225.147.58.sslip.io";
+import { getAppUrl } from "@/lib/site-url";
 
 // ─── Questions ──────────────────────────────────────────────────────────────
 
@@ -158,7 +157,7 @@ export default function TestPage() {
 
   async function handleShare() {
     if (!result) return;
-    const text = `Soy ${result.title} ${result.emoji} según Convive 🏠 ¿Y tú?\n→ ${APP_URL}/test`;
+    const text = `Soy ${result.title} ${result.emoji} según Convive 🏠 ¿Y tú?\n→ ${getAppUrl()}/test`;
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({ text });

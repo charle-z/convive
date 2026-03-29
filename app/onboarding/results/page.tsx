@@ -9,6 +9,7 @@ import StepIndicator from "@/components/onboarding/StepIndicator";
 import MatchCard from "@/components/match/MatchCard";
 import MatchLoadingScreen from "@/components/onboarding/MatchLoadingScreen";
 import CompatibilityReceipt from "@/components/match/CompatibilityReceipt";
+import { getAppUrl } from "@/lib/site-url";
 import type { MatchPair } from "@/lib/types";
 
 const STEP_LABELS = ["¿Qué buscas?", "Tu perfil", "Tus matches"];
@@ -19,8 +20,6 @@ const BUDGET_MONTHLY: Record<string, number> = {
   "900-1200": 1050000,
   "mas-1200": 1500000,
 };
-
-const APP_URL = "http://aqjvkejtr1h6oqnlwrd366sl.144.225.147.58.sslip.io";
 
 // ─── Skeleton ──────────────────────────────────────────────────────────────
 
@@ -113,7 +112,7 @@ function ShareButton({ score }: { score: number }) {
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
-    const text = `Encontré mi roomie ideal en Convive 🏠\nMi mejor match tiene ${score}% de compatibilidad.\n¿Cuál es el tuyo? → ${APP_URL}`;
+    const text = `Encontré mi roomie ideal en Convive 🏠\nMi mejor match tiene ${score}% de compatibilidad.\n¿Cuál es el tuyo? → ${getAppUrl()}`;
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({ text });
