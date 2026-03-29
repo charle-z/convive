@@ -39,6 +39,12 @@ export default function Footer() {
               >
                 Publica tu espacio
               </Link>
+              <Link
+                href="/test"
+                className="text-sm text-text-secondary hover:text-text transition-colors"
+              >
+                ¿Qué tipo de roomie eres?
+              </Link>
             </div>
             <div className="flex flex-col gap-2">
               <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">

@@ -8,6 +8,7 @@ import Navbar from "@/components/shared/Navbar";
 import StepIndicator from "@/components/onboarding/StepIndicator";
 import MatchCard from "@/components/match/MatchCard";
 import MatchLoadingScreen from "@/components/onboarding/MatchLoadingScreen";
+import CompatibilityReceipt from "@/components/match/CompatibilityReceipt";
 import type { MatchPair } from "@/lib/types";
 
 const STEP_LABELS = ["¿Qué buscas?", "Tu perfil", "Tus matches"];
@@ -155,6 +156,7 @@ export default function ResultsPage() {
   const [error, setError] = useState(false);
   const [matches, setMatches] = useState<MatchPair[]>([]);
   const [presupuesto, setPresupuesto] = useState<string>("600-900");
+  const [receiptMatch, setReceiptMatch] = useState<MatchPair | null>(null);
 
   const loading = !animDone || !fetchDone;
 
@@ -202,10 +204,22 @@ export default function ResultsPage() {
 
   return (
     <>
-      {/* Loading screen — shown until animation completes (and only if profile exists) */}
+      {/* Loading screen */}
       <AnimatePresence>
         {!noProfile && !animDone && (
           <MatchLoadingScreen onComplete={() => setAnimDone(true)} />
+        )}
+      </AnimatePresence>
+
+      {/* Receipt modal */}
+      <AnimatePresence>
+        {receiptMatch && (
+          <CompatibilityReceipt
+            profile={receiptMatch.profile}
+            result={receiptMatch.result}
+            savingsAnnual={(BUDGET_MONTHLY[presupuesto] ?? 750000) * 12}
+            onClose={() => setReceiptMatch(null)}
+          />
         )}
       </AnimatePresence>
 
@@ -309,12 +323,21 @@ export default function ResultsPage() {
               <ShareButton score={matches[0].result.score} />
 
               {matches.map(({ profile, result }, i) => (
-                <MatchCard
-                  key={profile.id}
-                  profile={profile}
-                  result={result}
-                  index={i}
-                />
+                <div key={profile.id}>
+                  <MatchCard
+                    profile={profile}
+                    result={result}
+                    index={i}
+                  />
+                  <div className="flex justify-end mt-1 mb-3">
+                    <button
+                      onClick={() => setReceiptMatch({ profile, result })}
+                      className="text-xs text-text-secondary hover:text-text transition-colors flex items-center gap-1"
+                    >
+                      🧾 Ver recibo de compatibilidad
+                    </button>
+                  </div>
+                </div>
               ))}
 
               {/* CTA al final */}
