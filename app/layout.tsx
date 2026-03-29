@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description:
     "Motor de compatibilidad para roomies en Cali. Encuentra con quién sí y con quién no deberías vivir, antes de mudarte.",
   icons: {
-    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236C5CE7'/><text y='.9em' font-size='80' x='10'>🏠</text></svg>",
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%236C5CE7'/><path d='M16 8L7 16h3v8h5v-5h2v5h5v-8h3L16 8z' fill='white'/></svg>",
   },
   openGraph: {
     title: "Convive — Elige con quién vivir",
