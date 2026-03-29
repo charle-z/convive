@@ -1,14 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, useInView } from "framer-motion";
+import { DollarSign, Share2 } from "lucide-react";
 import Navbar from "@/components/shared/Navbar";
 import StepIndicator from "@/components/onboarding/StepIndicator";
 import MatchCard from "@/components/match/MatchCard";
+import MatchLoadingScreen from "@/components/onboarding/MatchLoadingScreen";
 import type { MatchPair } from "@/lib/types";
 
 const STEP_LABELS = ["¿Qué buscas?", "Tu perfil", "Tus matches"];
+
+const BUDGET_MONTHLY: Record<string, number> = {
+  "menos-600": 500000,
+  "600-900": 750000,
+  "900-1200": 1050000,
+  "mas-1200": 1500000,
+};
+
+const APP_URL = "http://aqjvkejtr1h6oqnlwrd366sl.144.225.147.58.sslip.io";
+
+// ─── Skeleton ──────────────────────────────────────────────────────────────
 
 function SkeletonCard() {
   return (
@@ -29,27 +42,143 @@ function SkeletonCard() {
   );
 }
 
+// ─── Savings Card ──────────────────────────────────────────────────────────
+
+function SavingsCard({ presupuesto }: { presupuesto: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true });
+  const [displayed, setDisplayed] = useState(0);
+
+  const monthly = BUDGET_MONTHLY[presupuesto] ?? 750000;
+  const annual = monthly * 12;
+
+  useEffect(() => {
+    if (!inView) return;
+    const start = performance.now();
+    const duration = 1400;
+    let raf: number;
+    function tick(now: number) {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplayed(Math.round(eased * annual));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, annual]);
+
+  const formatted = displayed.toLocaleString("es-CO").replace(/,/g, ".");
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.15 }}
+      className="rounded-2xl p-5 mb-4 flex items-start gap-4"
+      style={{
+        backgroundColor: "rgba(0,184,148,0.08)",
+        border: "1px solid rgba(0,184,148,0.25)",
+      }}
+    >
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+        style={{ backgroundColor: "rgba(0,184,148,0.15)" }}
+      >
+        <DollarSign className="w-5 h-5" style={{ color: "var(--success)" }} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-text-secondary mb-1">
+          Tu ahorro estimado viviendo con un roomie compatible
+        </p>
+        <p
+          className="text-3xl font-bold font-mono leading-none mb-1"
+          style={{ color: "var(--success)" }}
+        >
+          ${formatted}
+        </p>
+        <p className="text-sm text-text-secondary">al año vs vivir solo en Cali</p>
+        <p className="text-xs mt-1" style={{ color: "rgba(139,139,163,0.6)" }}>
+          Basado en tu rango de presupuesto · Estimado referencial
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Share Button ──────────────────────────────────────────────────────────
+
+function ShareButton({ score }: { score: number }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
+    const text = `Encontré mi roomie ideal en Convive 🏠\nMi mejor match tiene ${score}% de compatibilidad.\n¿Cuál es el tuyo? → ${APP_URL}`;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch {}
+    }
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.25 }}
+      onClick={handleShare}
+      className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 mb-6"
+      style={{
+        borderColor: copied ? "rgba(0,184,148,0.4)" : "rgba(108,92,231,0.4)",
+        backgroundColor: copied ? "rgba(0,184,148,0.08)" : "rgba(108,92,231,0.08)",
+        color: copied ? "var(--success)" : "var(--primary-light)",
+      }}
+    >
+      <Share2 className="w-4 h-4" />
+      {copied ? "¡Copiado! ✓" : "Compartir mi resultado"}
+    </motion.button>
+  );
+}
+
+// ─── Page ──────────────────────────────────────────────────────────────────
+
 export default function ResultsPage() {
-  const [matches, setMatches] = useState<MatchPair[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Two independent flags that must both be true before showing results
+  const [animDone, setAnimDone] = useState(false);
+  const [fetchDone, setFetchDone] = useState(false);
   const [noProfile, setNoProfile] = useState(false);
   const [error, setError] = useState(false);
+  const [matches, setMatches] = useState<MatchPair[]>([]);
+  const [presupuesto, setPresupuesto] = useState<string>("600-900");
+
+  const loading = !animDone || !fetchDone;
 
   useEffect(() => {
     const saved = localStorage.getItem("convive_profile");
     if (!saved) {
       setNoProfile(true);
-      setLoading(false);
+      setAnimDone(true);
+      setFetchDone(true);
       return;
     }
 
-    let profile: unknown;
+    let profile: Record<string, unknown>;
     try {
       profile = JSON.parse(saved);
     } catch {
       setNoProfile(true);
-      setLoading(false);
+      setAnimDone(true);
+      setFetchDone(true);
       return;
+    }
+
+    if (profile.presupuesto && typeof profile.presupuesto === "string") {
+      setPresupuesto(profile.presupuesto);
     }
 
     fetch("/api/match", {
@@ -63,16 +192,23 @@ export default function ResultsPage() {
       })
       .then((data) => {
         setMatches(data.matches ?? []);
-        setLoading(false);
+        setFetchDone(true);
       })
       .catch(() => {
         setError(true);
-        setLoading(false);
+        setFetchDone(true);
       });
   }, []);
 
   return (
     <>
+      {/* Loading screen — shown until animation completes (and only if profile exists) */}
+      <AnimatePresence>
+        {!noProfile && !animDone && (
+          <MatchLoadingScreen onComplete={() => setAnimDone(true)} />
+        )}
+      </AnimatePresence>
+
       <Navbar />
       <main className="min-h-screen bg-bg pt-24 pb-16 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto">
@@ -96,13 +232,11 @@ export default function ResultsPage() {
             </p>
           </motion.div>
 
-          {/* Estado: sin perfil */}
+          {/* Sin perfil */}
           {noProfile && (
             <div className="text-center py-16 flex flex-col items-center gap-4">
               <p className="text-2xl">🏠</p>
-              <p className="text-lg font-semibold">
-                Primero completa tu perfil
-              </p>
+              <p className="text-lg font-semibold">Primero completa tu perfil</p>
               <p className="text-text-secondary text-sm">
                 Necesitamos saber más de ti para mostrarte matches compatibles.
               </p>
@@ -115,17 +249,15 @@ export default function ResultsPage() {
             </div>
           )}
 
-          {/* Estado: error */}
+          {/* Error */}
           {error && (
             <div className="text-center py-16 flex flex-col items-center gap-3">
-              <p className="text-lg font-semibold text-danger">
-                Algo salió mal
-              </p>
+              <p className="text-lg font-semibold text-danger">Algo salió mal</p>
               <p className="text-text-secondary text-sm">
                 No pudimos calcular tus matches. Intenta de nuevo.
               </p>
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => globalThis.window?.location.reload()}
                 className="mt-2 px-5 py-2.5 rounded-xl border border-border hover:border-primary/50 text-sm transition-colors"
               >
                 Reintentar
@@ -133,8 +265,8 @@ export default function ResultsPage() {
             </div>
           )}
 
-          {/* Estado: cargando */}
-          {loading && !noProfile && (
+          {/* Skeleton: after animation but fetch still running */}
+          {animDone && !fetchDone && !noProfile && (
             <div className="space-y-4">
               {[...Array(4)].map((_, i) => (
                 <SkeletonCard key={i} />
@@ -146,11 +278,9 @@ export default function ResultsPage() {
           {!loading && !noProfile && !error && matches.length > 0 && (
             <div className="space-y-4">
               {/* Resumen rápido */}
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 mb-6 text-sm text-text-secondary">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 mb-4 text-sm text-text-secondary">
                 <span>
-                  <strong className="text-text font-mono">
-                    {matches.length}
-                  </strong>{" "}
+                  <strong className="text-text font-mono">{matches.length}</strong>{" "}
                   matches encontrados
                 </span>
                 <span className="hidden sm:inline">·</span>
@@ -171,6 +301,12 @@ export default function ResultsPage() {
                   </strong>
                 </span>
               </div>
+
+              {/* Card de ahorro */}
+              <SavingsCard presupuesto={presupuesto} />
+
+              {/* Botón compartir */}
+              <ShareButton score={matches[0].result.score} />
 
               {matches.map(({ profile, result }, i) => (
                 <MatchCard
