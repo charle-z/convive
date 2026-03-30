@@ -14,8 +14,9 @@ import { getAppUrl } from "@/lib/site-url";
 import { SEED_PROFILES } from "@/lib/seed-data";
 import { calculateMatch } from "@/lib/matching";
 import {
-  calculateProjectedAnnualSavings,
+  calculateProjectedAnnualValue,
   getBudgetMonthly,
+  getSpacePriceMonthly,
 } from "@/lib/budget";
 import {
   DEFAULT_INTENT,
@@ -104,7 +105,9 @@ const RESULTS_COPY: Record<
     summaryLabel: string;
     shareText: (score: number) => string;
     savingsLabel: string;
+    savingsSubline: string;
     savingsNote: string;
+    receiptAmountLabel: string;
   }
 > = {
   "busco-cuarto": {
@@ -119,8 +122,10 @@ const RESULTS_COPY: Record<
     shareText: (score) =>
       `Encontré mi roomie ideal en Convive 🏠\nMi mejor match tiene ${score}% de compatibilidad.\n¿Cuál es el tuyo? → ${getAppUrl()}`,
     savingsLabel: "Tu ahorro estimado viviendo con un roomie compatible",
+    savingsSubline: "al año vs vivir solo en Cali",
     savingsNote:
       "Ajustado por tu rango de presupuesto y la compatibilidad de tu mejor match",
+    receiptAmountLabel: "AHORRO PROYECTADO",
   },
   "busco-grupo": {
     title: "Personas compatibles para armar grupo contigo",
@@ -135,8 +140,10 @@ const RESULTS_COPY: Record<
     shareText: (score) =>
       `Encontré personas compatibles para armar grupo en Convive 🏠\nMi mejor compatibilidad tiene ${score}%.\n¿Cuál es la tuya? → ${getAppUrl()}`,
     savingsLabel: "Tu ahorro estimado si armas grupo con personas compatibles",
+    savingsSubline: "al año vs vivir solo en Cali",
     savingsNote:
       "Ajustado por tu rango de presupuesto y la compatibilidad de tu mejor match",
+    receiptAmountLabel: "AHORRO PROYECTADO",
   },
   "ofrezco-cuarto": {
     title: "Personas compatibles para tu espacio",
@@ -149,9 +156,11 @@ const RESULTS_COPY: Record<
     summaryLabel: "personas compatibles encontradas",
     shareText: (score) =>
       `Encontré el roomie ideal para mi espacio en Convive 🏠\nMi mejor match tiene ${score}% de compatibilidad.\n¿Encontrás el tuyo? → ${getAppUrl()}`,
-    savingsLabel: "Ahorro estimado al vivir con un roomie compatible",
+    savingsLabel: "Aporte anual estimado del roomie ideal",
+    savingsSubline: "al año para cubrir el valor del espacio",
     savingsNote:
-      "Basado en el aporte esperado del roomie y la compatibilidad de presupuesto",
+      "Calculado con el valor mensual del espacio y la compatibilidad de presupuesto",
+    receiptAmountLabel: "APORTE PROYECTADO",
   },
 };
 
@@ -208,10 +217,12 @@ function SkeletonCard() {
 function SavingsCard({
   savingsAnnual,
   label,
+  subline,
   note,
 }: {
   savingsAnnual: number;
   label: string;
+  subline: string;
   note: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -263,7 +274,7 @@ function SavingsCard({
         >
           ${formatted}
         </p>
-        <p className="text-sm text-text-secondary">al año vs vivir solo en Cali</p>
+        <p className="text-sm text-text-secondary">{subline}</p>
         <p className="text-xs mt-1" style={{ color: "rgba(139,139,163,0.6)" }}>
           {note}
         </p>
@@ -330,9 +341,17 @@ export default function ResultsPage() {
   const copy = RESULTS_COPY[intent];
   const stepLabels = STEP_LABELS[intent];
   const loading = !animDone || !fetchDone;
+  const spacePriceMonthly = getSpacePriceMonthly(spaceData?.precio);
   const topMatchSavingsAnnual = matches[0]
-    ? calculateProjectedAnnualSavings(presupuesto, matches[0].result)
-    : getBudgetMonthly(presupuesto) * 12;
+    ? calculateProjectedAnnualValue({
+        intent,
+        budget: presupuesto,
+        result: matches[0].result,
+        spacePriceMonthly,
+      })
+    : (intent === "ofrezco-cuarto" && spacePriceMonthly
+        ? spacePriceMonthly
+        : getBudgetMonthly(presupuesto)) * 12;
 
   useEffect(() => {
     const storedIntent = normalizeIntent(localStorage.getItem(INTENT_STORAGE_KEY));
@@ -411,10 +430,14 @@ export default function ResultsPage() {
           <CompatibilityReceipt
             profile={receiptMatch.profile}
             result={receiptMatch.result}
-            savingsAnnual={calculateProjectedAnnualSavings(
-              presupuesto,
-              receiptMatch.result
-            )}
+            savingsAnnual={calculateProjectedAnnualValue({
+              intent,
+              budget: presupuesto,
+              result: receiptMatch.result,
+              spacePriceMonthly,
+            })}
+            amountLabel={copy.receiptAmountLabel}
+            amountNote={copy.savingsNote}
             onClose={() => setReceiptMatch(null)}
           />
         )}
@@ -510,6 +533,7 @@ export default function ResultsPage() {
               <SavingsCard
                 savingsAnnual={topMatchSavingsAnnual}
                 label={copy.savingsLabel}
+                subline={copy.savingsSubline}
                 note={copy.savingsNote}
               />
 

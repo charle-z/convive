@@ -271,7 +271,7 @@ interface QuestionCopyOverride {
 }
 
 const OFREZCO_OVERRIDES: Record<string, QuestionCopyOverride> = {
-  presupuesto: { question: "¿Cuánto cobras por el espacio?" },
+  presupuesto: { question: "¿Qué presupuesto esperas que pueda aportar tu roomie?" },
   zona: { question: "¿En qué zona está tu espacio?" },
   limpieza: { question: "¿Qué nivel de limpieza esperas de tu roomie?" },
   horario: { question: "¿Qué horario prefieres en tu roomie?" },

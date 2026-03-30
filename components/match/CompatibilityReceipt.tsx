@@ -9,6 +9,8 @@ interface Props {
   profile: SeedProfile;
   result: MatchResult;
   savingsAnnual: number;
+  amountLabel: string;
+  amountNote: string;
   onClose: () => void;
 }
 
@@ -49,7 +51,14 @@ function ZigZag({ flip = false }: { flip?: boolean }) {
 
 const TOP_CATEGORIES = ["Presupuesto", "Zona", "Limpieza", "Horario"];
 
-export default function CompatibilityReceipt({ profile, result, savingsAnnual, onClose }: Props) {
+export default function CompatibilityReceipt({
+  profile,
+  result,
+  savingsAnnual,
+  amountLabel,
+  amountNote,
+  onClose,
+}: Props) {
   const [code] = useState(randomCode);
   const [copied, setCopied] = useState(false);
 
@@ -77,8 +86,9 @@ export default function CompatibilityReceipt({ profile, result, savingsAnnual, o
     `DESGLOSE:`,
     ...topCats.map((c) => `${c.name.padEnd(12)} ${bar(c.score, "█", "░", 6)} ${c.score}%`),
     `─────────────────────────`,
-    `AHORRO PROYECTADO`,
+    amountLabel,
     `${formatCOP(savingsAnnual)} / año`,
+    amountNote,
     `─────────────────────────`,
     `"Elige con quién vivir."`,
     `convive · Cali, Colombia`,
@@ -165,13 +175,13 @@ export default function CompatibilityReceipt({ profile, result, savingsAnnual, o
             {/* Ahorro */}
             <div className="border-t border-dashed border-gray-400 my-2" />
             <p className="font-bold text-[10px] tracking-wider text-gray-500 mb-1">
-              AHORRO PROYECTADO
+              {amountLabel}
             </p>
             <p className="text-sm font-bold" style={{ color: "#00B894" }}>
               {formatCOP(savingsAnnual)} / año
             </p>
             <p className="text-[10px] text-gray-500">
-              Ajustado por compatibilidad de presupuesto
+              {amountNote}
             </p>
 
             {/* Footer ticket */}
