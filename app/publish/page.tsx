@@ -42,6 +42,15 @@ const REGLAS = [
   { id: "aviso-visitas", label: "Aviso previo para visitas" },
 ];
 
+const REQUIRED_FIELD_LABELS = {
+  spaceType: "tipo de espacio",
+  precio: "precio mensual",
+  barrio: "barrio o sector",
+  descripcion: "descripción del espacio",
+  genero: "preferencia de género",
+  presupuesto: "presupuesto esperado del roomie",
+} as const;
+
 // ─── Pantalla puente ─────────────────────────────────────────────────────────
 
 function BridgeScreen({ onContinue }: { onContinue: () => void }) {
@@ -81,6 +90,7 @@ function BridgeScreen({ onContinue }: { onContinue: () => void }) {
 export default function PublishPage() {
   const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
 
   // Sección 1
   const [spaceType, setSpaceType] = useState<string | null>(null);
@@ -106,6 +116,9 @@ export default function PublishPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setShowValidation(true);
+    if (!canSubmit) return;
+
     // Guardar datos del espacio en localStorage para referencia
     localStorage.setItem(
       "convive_space_data",
@@ -115,6 +128,18 @@ export default function PublishPage() {
   }
 
   const canSubmit = spaceType && precio && barrio && descripcion && genero && presupuesto;
+  const missingFields = [
+    !spaceType ? REQUIRED_FIELD_LABELS.spaceType : null,
+    !precio ? REQUIRED_FIELD_LABELS.precio : null,
+    !barrio ? REQUIRED_FIELD_LABELS.barrio : null,
+    !descripcion ? REQUIRED_FIELD_LABELS.descripcion : null,
+    !genero ? REQUIRED_FIELD_LABELS.genero : null,
+    !presupuesto ? REQUIRED_FIELD_LABELS.presupuesto : null,
+  ].filter((field): field is Exclude<typeof field, null> => field !== null);
+
+  function fieldHasError(isMissing: boolean) {
+    return showValidation && isMissing;
+  }
 
   if (submitted) {
     return (
@@ -149,6 +174,37 @@ export default function PublishPage() {
             </p>
           </motion.div>
 
+          {showValidation && missingFields.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 rounded-2xl border px-4 py-4"
+              style={{
+                backgroundColor: "rgba(225,112,85,0.08)",
+                borderColor: "rgba(225,112,85,0.28)",
+              }}
+            >
+              <p className="text-sm font-semibold text-danger mb-2">
+                Todavía te falta completar:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {missingFields.map((field) => (
+                  <span
+                    key={field}
+                    className="px-2.5 py-1 rounded-full text-xs border"
+                    style={{
+                      color: "var(--danger)",
+                      borderColor: "rgba(225,112,85,0.28)",
+                      backgroundColor: "rgba(225,112,85,0.08)",
+                    }}
+                  >
+                    {field}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-10">
 
             {/* ── Sección 1: El espacio ── */}
@@ -163,7 +219,7 @@ export default function PublishPage() {
               {/* Tipo de espacio */}
               <div>
                 <p className="text-sm text-text-secondary mb-3">
-                  ¿Qué tipo de espacio ofreces?
+                  ¿Qué tipo de espacio ofreces? <span className="text-danger">*</span>
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {SPACE_TYPES.map(({ id, label, icon: Icon, desc }) => {
@@ -178,7 +234,11 @@ export default function PublishPage() {
                           backgroundColor: active
                             ? "rgba(108,92,231,0.12)"
                             : "var(--surface)",
-                          borderColor: active ? "var(--primary)" : "var(--border)",
+                          borderColor: active
+                            ? "var(--primary)"
+                            : fieldHasError(!spaceType)
+                            ? "var(--danger)"
+                            : "var(--border)",
                         }}
                       >
                         <Icon
@@ -195,31 +255,47 @@ export default function PublishPage() {
                     );
                   })}
                 </div>
+                {fieldHasError(!spaceType) && (
+                  <p className="text-xs text-danger mt-2">
+                    Selecciona qué tipo de espacio estás ofreciendo.
+                  </p>
+                )}
               </div>
 
               {/* Precio */}
               <div>
                 <label className="block text-sm text-text-secondary mb-2">
-                  Precio mensual (COP)
+                  Precio mensual (COP) <span className="text-danger">*</span>
                 </label>
                 <input
                   type="number"
                   placeholder="Ej: 750000"
                   value={precio}
                   onChange={(e) => setPrecio(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:border-primary/60 focus:outline-none transition-colors text-sm font-mono placeholder:text-text-secondary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-surface border focus:border-primary/60 focus:outline-none transition-colors text-sm font-mono placeholder:text-text-secondary/50"
+                  style={{
+                    borderColor: fieldHasError(!precio) ? "var(--danger)" : "var(--border)",
+                  }}
                 />
+                {fieldHasError(!precio) && (
+                  <p className="text-xs text-danger mt-2">
+                    Ingresa el valor mensual del espacio.
+                  </p>
+                )}
               </div>
 
               {/* Barrio */}
               <div>
                 <label className="block text-sm text-text-secondary mb-2">
-                  Barrio / Sector
+                  Barrio / Sector <span className="text-danger">*</span>
                 </label>
                 <select
                   value={barrio}
                   onChange={(e) => setBarrio(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-surface text-text border border-border focus:border-primary/60 focus:outline-none transition-colors text-sm appearance-none"
+                  className="w-full px-4 py-3 rounded-xl bg-surface text-text border focus:border-primary/60 focus:outline-none transition-colors text-sm appearance-none"
+                  style={{
+                    borderColor: fieldHasError(!barrio) ? "var(--danger)" : "var(--border)",
+                  }}
                 >
                   <option value="" disabled>
                     Selecciona el barrio
@@ -230,23 +306,36 @@ export default function PublishPage() {
                     </option>
                   ))}
                 </select>
+                {fieldHasError(!barrio) && (
+                  <p className="text-xs text-danger mt-2">
+                    Elige el barrio o sector del espacio.
+                  </p>
+                )}
               </div>
 
               {/* Descripción */}
               <div>
                 <label className="block text-sm text-text-secondary mb-2">
-                  Descripción del espacio
+                  Descripción del espacio <span className="text-danger">*</span>
                 </label>
                 <textarea
                   placeholder="Cuéntanos sobre el lugar, los servicios incluidos, el ambiente..."
                   value={descripcion}
                   onChange={(e) => setDescripcion(e.target.value.slice(0, 200))}
                   rows={4}
-                  className="w-full px-4 py-3 rounded-xl bg-surface border border-border focus:border-primary/60 focus:outline-none transition-colors text-sm resize-none placeholder:text-text-secondary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-surface border focus:border-primary/60 focus:outline-none transition-colors text-sm resize-none placeholder:text-text-secondary/50"
+                  style={{
+                    borderColor: fieldHasError(!descripcion) ? "var(--danger)" : "var(--border)",
+                  }}
                 />
                 <p className="text-xs text-text-secondary mt-1 text-right">
                   {descripcion.length}/200
                 </p>
+                {fieldHasError(!descripcion) && (
+                  <p className="text-xs text-danger mt-2">
+                    Describe el espacio con un poco más de detalle.
+                  </p>
+                )}
               </div>
             </motion.section>
 
@@ -265,7 +354,7 @@ export default function PublishPage() {
               {/* Género preferido */}
               <div>
                 <p className="text-sm text-text-secondary mb-3">
-                  Preferencia de género
+                  Preferencia de género <span className="text-danger">*</span>
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {GENERO_OPTIONS.map(({ id, label }) => {
@@ -280,7 +369,11 @@ export default function PublishPage() {
                           backgroundColor: active
                             ? "rgba(108,92,231,0.12)"
                             : "var(--surface)",
-                          borderColor: active ? "var(--primary)" : "var(--border)",
+                          borderColor: active
+                            ? "var(--primary)"
+                            : fieldHasError(!genero)
+                            ? "var(--danger)"
+                            : "var(--border)",
                           color: active ? "var(--primary-light)" : "var(--text-secondary)",
                         }}
                       >
@@ -289,12 +382,17 @@ export default function PublishPage() {
                     );
                   })}
                 </div>
+                {fieldHasError(!genero) && (
+                  <p className="text-xs text-danger mt-2">
+                    Define qué perfil de persona buscas para tu espacio.
+                  </p>
+                )}
               </div>
 
               {/* Presupuesto esperado */}
               <div>
                 <p className="text-sm text-text-secondary mb-3">
-                  Presupuesto esperado del roomie
+                  Presupuesto esperado del roomie <span className="text-danger">*</span>
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {PRESUPUESTO_OPTIONS.map(({ id, label }) => {
@@ -309,7 +407,11 @@ export default function PublishPage() {
                           backgroundColor: active
                             ? "rgba(108,92,231,0.12)"
                             : "var(--surface)",
-                          borderColor: active ? "var(--primary)" : "var(--border)",
+                          borderColor: active
+                            ? "var(--primary)"
+                            : fieldHasError(!presupuesto)
+                            ? "var(--danger)"
+                            : "var(--border)",
                           color: active ? "var(--primary-light)" : "var(--text-secondary)",
                         }}
                       >
@@ -318,6 +420,11 @@ export default function PublishPage() {
                     );
                   })}
                 </div>
+                {fieldHasError(!presupuesto) && (
+                  <p className="text-xs text-danger mt-2">
+                    Marca el rango que debería poder aportar el roomie.
+                  </p>
+                )}
               </div>
 
               {/* Reglas */}
@@ -373,8 +480,7 @@ export default function PublishPage() {
             >
               <button
                 type="submit"
-                disabled={!canSubmit}
-                className="w-full py-4 rounded-xl font-semibold text-base text-white transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-xl hover:-translate-y-0.5"
+                className="w-full py-4 rounded-xl font-semibold text-base text-white transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
                 style={{
                   background: canSubmit
                     ? "linear-gradient(135deg, var(--primary), #8B7CF6)"
@@ -385,7 +491,7 @@ export default function PublishPage() {
               </button>
               {!canSubmit && (
                 <p className="text-center text-xs text-text-secondary mt-2">
-                  Completa todos los campos para continuar
+                  Cuando lo intentes, te marcaremos exactamente qué falta.
                 </p>
               )}
             </motion.div>
