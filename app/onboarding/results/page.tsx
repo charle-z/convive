@@ -124,7 +124,7 @@ const RESULTS_COPY: Record<
     savingsLabel: "Tu ahorro estimado viviendo con un roomie compatible",
     savingsSubline: "al año vs vivir solo en Cali",
     savingsNote:
-      "Ajustado por tu rango de presupuesto y la compatibilidad de tu mejor match",
+      "Estimado con tu rango de presupuesto, el score global del match y su compatibilidad economica",
     receiptAmountLabel: "AHORRO PROYECTADO",
   },
   "busco-grupo": {
@@ -142,7 +142,7 @@ const RESULTS_COPY: Record<
     savingsLabel: "Tu ahorro estimado si armas grupo con personas compatibles",
     savingsSubline: "al año vs vivir solo en Cali",
     savingsNote:
-      "Ajustado por tu rango de presupuesto y la compatibilidad de tu mejor match",
+      "Estimado con tu rango de presupuesto, el score global del match y su compatibilidad economica",
     receiptAmountLabel: "AHORRO PROYECTADO",
   },
   "ofrezco-cuarto": {
@@ -159,7 +159,7 @@ const RESULTS_COPY: Record<
     savingsLabel: "Aporte anual estimado del roomie ideal",
     savingsSubline: "al año para cubrir el valor del espacio",
     savingsNote:
-      "Calculado con el valor mensual del espacio y la compatibilidad de presupuesto",
+      "Calculado con el valor mensual del espacio, el score global del match y su compatibilidad economica",
     receiptAmountLabel: "APORTE PROYECTADO",
   },
 };

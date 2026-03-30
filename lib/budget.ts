@@ -16,6 +16,13 @@ export function getBudgetCompatibilityScore(result: MatchResult): number {
   return result.categories.find((category) => category.name === "Presupuesto")?.score ?? 100;
 }
 
+export function getProjectedValueScore(result: MatchResult): number {
+  const overallScore = result.score;
+  const budgetScore = getBudgetCompatibilityScore(result);
+
+  return Math.round(overallScore * 0.7 + budgetScore * 0.3);
+}
+
 export function getSpacePriceMonthly(rawPrice: number | string | null | undefined): number | null {
   if (typeof rawPrice === "number" && Number.isFinite(rawPrice) && rawPrice > 0) {
     return rawPrice;
@@ -36,7 +43,7 @@ export function calculateProjectedAnnualSavings(
   result: MatchResult
 ): number {
   const baseAnnual = getBudgetMonthly(budget) * 12;
-  return Math.round(baseAnnual * (getBudgetCompatibilityScore(result) / 100));
+  return Math.round(baseAnnual * (getProjectedValueScore(result) / 100));
 }
 
 export function calculateProjectedAnnualValue(params: {
@@ -50,7 +57,7 @@ export function calculateProjectedAnnualValue(params: {
   if (intent === "ofrezco-cuarto") {
     const monthlyPrice = getSpacePriceMonthly(spacePriceMonthly);
     const baseAnnual = (monthlyPrice ?? getBudgetMonthly(budget)) * 12;
-    return Math.round(baseAnnual * (getBudgetCompatibilityScore(result) / 100));
+    return Math.round(baseAnnual * (getProjectedValueScore(result) / 100));
   }
 
   return calculateProjectedAnnualSavings(budget, result);
