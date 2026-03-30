@@ -10,16 +10,16 @@ interface StepIndicatorProps {
 
 export default function StepIndicator({ currentStep, labels }: StepIndicatorProps) {
   return (
-    <div className="flex items-start justify-between w-full gap-2">
+    <div className="flex items-start justify-center w-full">
       {labels.map((label, i) => {
         const stepNum = i + 1;
         const isCompleted = stepNum < currentStep;
         const isActive = stepNum === currentStep;
 
         return (
-          <div key={i} className="flex items-start flex-1 min-w-0">
+          <div key={i} className="flex items-start min-w-0">
             {/* Step circle + label */}
-            <div className="flex flex-col items-center gap-2 min-w-0">
+            <div className="flex flex-col items-center gap-2 w-[72px] sm:w-[92px] min-w-0">
               <motion.div
                 initial={false}
                 animate={{
@@ -52,7 +52,7 @@ export default function StepIndicator({ currentStep, labels }: StepIndicatorProp
               </motion.div>
 
               <span
-                className={`text-[11px] text-center max-w-[86px] sm:max-w-none whitespace-normal leading-tight transition-colors duration-200 ${
+                className={`text-[11px] sm:text-xs text-center whitespace-normal leading-tight transition-colors duration-200 ${
                   isActive
                     ? "text-text font-medium"
                     : isCompleted
@@ -66,7 +66,7 @@ export default function StepIndicator({ currentStep, labels }: StepIndicatorProp
 
             {/* Connector line between steps */}
             {i < labels.length - 1 && (
-              <div className="relative flex-1 min-w-4 sm:min-w-10 h-0.5 bg-border mx-2 sm:mx-3 mt-4">
+              <div className="relative w-10 sm:w-20 md:w-28 h-0.5 bg-border mx-2 sm:mx-3 mt-4 flex-shrink-0">
                 <motion.div
                   className="absolute top-0 left-0 h-full rounded-full bg-primary"
                   initial={false}
