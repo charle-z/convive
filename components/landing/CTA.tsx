@@ -67,7 +67,7 @@ export default function CTA() {
               href="/publish"
               className="flex items-center justify-center px-8 py-4 rounded-xl border border-border hover:border-primary/50 text-text-secondary hover:text-text font-medium text-lg transition-all duration-200"
             >
-              Publicar mi espacio
+              Encontrar roomie para mi espacio
             </Link>
           </div>
 

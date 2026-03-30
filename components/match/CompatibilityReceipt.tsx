@@ -49,8 +49,6 @@ function ZigZag({ flip = false }: { flip?: boolean }) {
   );
 }
 
-const TOP_CATEGORIES = ["Presupuesto", "Zona", "Limpieza", "Horario"];
-
 export default function CompatibilityReceipt({
   profile,
   result,
@@ -68,8 +66,8 @@ export default function CompatibilityReceipt({
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  const topCats = result.categories
-    .filter((c) => TOP_CATEGORIES.includes(c.name))
+  const topCats = [...result.categories]
+    .sort((a, b) => b.score - a.score)
     .slice(0, 4);
 
   const textContent = [

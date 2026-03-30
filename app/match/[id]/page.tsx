@@ -261,6 +261,34 @@ export default function MatchDetailPage() {
             </div>
           </motion.div>
 
+          {!result && (
+            <motion.section
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.12 }}
+              className="mb-6 p-5 rounded-2xl border"
+              style={{
+                backgroundColor: "rgba(108,92,231,0.08)",
+                borderColor: "rgba(108,92,231,0.28)",
+              }}
+            >
+              <h2 className="text-base font-semibold mb-2">
+                Completa tu perfil para ver la compatibilidad real
+              </h2>
+              <p className="text-sm text-text-secondary leading-relaxed mb-4">
+                Ya puedes explorar este perfil, pero el score, los conflictos
+                potenciales y el pacto sugerido solo aparecen cuando terminas
+                tu perfil de convivencia.
+              </p>
+              <Link
+                href="/onboarding"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-light text-white text-sm font-medium transition-colors"
+              >
+                Completar mi perfil
+              </Link>
+            </motion.section>
+          )}
+
           {/* ── Semáforo completo ── */}
           {result && sortedCategories.length > 0 && (
             <section className="mb-6">

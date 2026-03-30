@@ -47,7 +47,7 @@ const PROFILES = [
   {
     emoji: "🏠",
     title: "Tengo un cuarto disponible",
-    desc: "Persona que arrienda un apartamento y quiere un roomie que encaje con su estilo de vida, no solo alguien que pague a tiempo. Publica su espacio y recibe solo candidatos compatibles.",
+    desc: "Persona que arrienda un apartamento y quiere un roomie que encaje con su estilo de vida, no solo alguien que pague a tiempo. Define su espacio y recibe solo candidatos compatibles.",
   },
 ];
 

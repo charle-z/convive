@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Home, Building2, Users, CheckSquare, Square, ArrowRight } from "lucide-react";
 import Navbar from "@/components/shared/Navbar";
 import { INTENT_STORAGE_KEY } from "@/lib/intent";
+import { readSpaceData, SPACE_DATA_STORAGE_KEY } from "@/lib/space-data";
 
 // ─── Datos ──────────────────────────────────────────────────────────────────
 
@@ -106,6 +107,16 @@ export default function PublishPage() {
   // Asegurar intent correcto al entrar a esta página
   useEffect(() => {
     localStorage.setItem(INTENT_STORAGE_KEY, "ofrezco-cuarto");
+    const savedSpace = readSpaceData();
+    if (!savedSpace) return;
+
+    setSpaceType(savedSpace.spaceType ?? null);
+    setPrecio(savedSpace.precio ?? "");
+    setBarrio(savedSpace.barrio ?? "");
+    setDescripcion(savedSpace.descripcion ?? "");
+    setGenero(savedSpace.genero ?? null);
+    setPresupuesto(savedSpace.presupuesto ?? null);
+    setReglas(savedSpace.reglas ?? []);
   }, []);
 
   function toggleRegla(id: string) {
@@ -121,18 +132,34 @@ export default function PublishPage() {
 
     // Guardar datos del espacio en localStorage para referencia
     localStorage.setItem(
-      "convive_space_data",
-      JSON.stringify({ spaceType, precio, barrio, descripcion, genero, presupuesto, reglas })
+      SPACE_DATA_STORAGE_KEY,
+      JSON.stringify({
+        spaceType,
+        precio: String(Math.round(Number(precio))),
+        barrio,
+        descripcion: descripcion.trim(),
+        genero,
+        presupuesto,
+        reglas,
+      })
     );
     setSubmitted(true);
   }
 
-  const canSubmit = spaceType && precio && barrio && descripcion && genero && presupuesto;
+  const hasPositivePrice = Number(precio) > 0;
+  const hasDescription = descripcion.trim().length > 0;
+  const canSubmit =
+    !!spaceType &&
+    hasPositivePrice &&
+    !!barrio &&
+    hasDescription &&
+    !!genero &&
+    !!presupuesto;
   const missingFields = [
     !spaceType ? REQUIRED_FIELD_LABELS.spaceType : null,
-    !precio ? REQUIRED_FIELD_LABELS.precio : null,
+    !hasPositivePrice ? REQUIRED_FIELD_LABELS.precio : null,
     !barrio ? REQUIRED_FIELD_LABELS.barrio : null,
-    !descripcion ? REQUIRED_FIELD_LABELS.descripcion : null,
+    !hasDescription ? REQUIRED_FIELD_LABELS.descripcion : null,
     !genero ? REQUIRED_FIELD_LABELS.genero : null,
     !presupuesto ? REQUIRED_FIELD_LABELS.presupuesto : null,
   ].filter((field): field is Exclude<typeof field, null> => field !== null);
@@ -274,12 +301,12 @@ export default function PublishPage() {
                   onChange={(e) => setPrecio(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-surface border focus:border-primary/60 focus:outline-none transition-colors text-sm font-mono placeholder:text-text-secondary/50"
                   style={{
-                    borderColor: fieldHasError(!precio) ? "var(--danger)" : "var(--border)",
+                    borderColor: fieldHasError(!hasPositivePrice) ? "var(--danger)" : "var(--border)",
                   }}
                 />
-                {fieldHasError(!precio) && (
+                {fieldHasError(!hasPositivePrice) && (
                   <p className="text-xs text-danger mt-2">
-                    Ingresa el valor mensual del espacio.
+                    Ingresa un valor mensual valido para el espacio.
                   </p>
                 )}
               </div>
@@ -325,13 +352,13 @@ export default function PublishPage() {
                   rows={4}
                   className="w-full px-4 py-3 rounded-xl bg-surface border focus:border-primary/60 focus:outline-none transition-colors text-sm resize-none placeholder:text-text-secondary/50"
                   style={{
-                    borderColor: fieldHasError(!descripcion) ? "var(--danger)" : "var(--border)",
+                    borderColor: fieldHasError(!hasDescription) ? "var(--danger)" : "var(--border)",
                   }}
                 />
                 <p className="text-xs text-text-secondary mt-1 text-right">
                   {descripcion.length}/200
                 </p>
-                {fieldHasError(!descripcion) && (
+                {fieldHasError(!hasDescription) && (
                   <p className="text-xs text-danger mt-2">
                     Describe el espacio con un poco más de detalle.
                   </p>

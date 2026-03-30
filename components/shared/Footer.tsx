@@ -37,7 +37,7 @@ export default function Footer() {
                 href="/publish"
                 className="text-sm text-text-secondary hover:text-text transition-colors"
               >
-                Publica tu espacio
+                Encuentra roomie para tu espacio
               </Link>
               <Link
                 href="/test"

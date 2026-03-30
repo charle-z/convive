@@ -17,6 +17,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { INTENT_STORAGE_KEY, normalizeIntent } from "@/lib/intent";
+import { getSpaceProfileOverrides, readSpaceData } from "@/lib/space-data";
 
 // ─────────────────────────────────────
 // Types
@@ -277,8 +278,33 @@ const OFREZCO_OVERRIDES: Record<string, QuestionCopyOverride> = {
   horario: { question: "¿Qué horario prefieres en tu roomie?" },
   ruido: { question: "¿Cuánto ruido toleras en casa?" },
   visitas: { question: "¿Qué tan seguido pueden recibir visitas?" },
+  mascotas: {
+    question: "¿Aceptas mascotas en tu espacio?",
+    options: {
+      "no-quiero": "No se permiten mascotas",
+      tengo: "Busco a alguien que conviva bien con mascotas",
+      acepto: "Se aceptan mascotas",
+      alergico: "No se permiten por alergias o restricciones",
+    },
+  },
+  fumar: {
+    question: "¿Permites fumar en el espacio?",
+    options: {
+      "no-fumo": "No se permite fumar",
+      afuera: "Solo si fuman afuera",
+      "en-casa": "Se puede fumar dentro",
+      indiferente: "Me es indiferente",
+    },
+  },
   fecha: { question: "¿Para cuándo está disponible el espacio?" },
+  cocina: { question: "¿Qué uso de la cocina te parece más compatible?" },
   fiestas: { question: "¿Permites fiestas o reuniones en el espacio?" },
+  pareja: {
+    question: "¿Qué tan cómodo te sientes con parejas que visitan seguido?",
+  },
+  gastos: {
+    question: "¿Cómo prefieres manejar gastos y servicios en tu espacio?",
+  },
 };
 
 const GRUPO_OVERRIDES: Record<string, QuestionCopyOverride> = {
@@ -364,27 +390,15 @@ export default function ConvivenceForm() {
       } catch {}
     }
 
-    // Prefill from space data when offering a room and quiz not yet answered
-    if (savedIntent === "ofrezco-cuarto" && !saved) {
-      try {
-        const spaceRaw = localStorage.getItem("convive_space_data");
-        if (spaceRaw) {
-          const space = JSON.parse(spaceRaw) as {
-            presupuesto?: string;
-            barrio?: string;
-            genero?: string;
-          };
-          const BARRIO_TO_ZONA: Record<string, string> = {
-            Granada: "sur", "El Peñón": "sur", "San Fernando": "sur",
-            "Ciudad Jardín": "sur", Tequendama: "sur",
-            Chipichape: "norte", Centenario: "norte", Menga: "norte", Normandía: "norte",
-            "San Antonio": "centro", Versalles: "centro", "Santa Mónica": "centro", Flora: "centro",
-          };
-          if (space.presupuesto) baseAnswers.presupuesto = space.presupuesto;
-          if (space.barrio) baseAnswers.zona = BARRIO_TO_ZONA[space.barrio] ?? "me-adapto";
-          if (space.genero) baseAnswers.genero = space.genero;
-        }
-      } catch {}
+    if (savedIntent === "ofrezco-cuarto") {
+      const space = readSpaceData();
+      if (space) {
+        const overrides = getSpaceProfileOverrides(space);
+        baseAnswers = {
+          ...baseAnswers,
+          ...overrides,
+        };
+      }
     }
 
     if (Object.keys(baseAnswers).length > 0) setAnswers(baseAnswers);

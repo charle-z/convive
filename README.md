@@ -19,7 +19,7 @@ En Colombia, buscar roomie es un acto de fe. Facebook mezcla anuncios sin verifi
 Propuesta de valor clara, animaciones premium, sin registro requerido.
 
 ### 2. Onboarding — ¿Qué buscas?
-Elige si buscas cuarto, ofreces espacio o armas grupo.
+Elige si buscas cuarto, quieres encontrar roomie para tu espacio o armar grupo.
 
 ### 3. Tu perfil de convivencia
 Quiz de 15 preguntas con slide animation. Cubre presupuesto, zona,
@@ -34,8 +34,8 @@ alertas de dealbreaker visibles antes de contactar.
 Semáforo completo por categoría (12 dimensiones), card de conflictos,
 tags de preferencias y CTA directo a WhatsApp.
 
-### 6. Publicar espacio
-Formulario para ofrecer un cuarto, con preferencias de roomie ideal.
+### 6. Tu espacio
+Formulario para definir tu espacio y encontrar personas compatibles para vivir ahí.
 
 ## ⚙️ Stack técnico
 
@@ -46,7 +46,7 @@ Formulario para ofrecer un cuarto, con preferencias de roomie ideal.
 | Animaciones | Framer Motion |
 | Componentes | shadcn/ui |
 | Lenguaje | TypeScript |
-| Data | Seed data JSON (20 perfiles reales de Cali) |
+| Data | Seed data JSON (22 perfiles de Cali) |
 | Deploy | CubePath VPS + Coolify |
 
 ## 🧠 Motor de matching
@@ -84,7 +84,7 @@ convive/
 │   ├── onboarding/profile/         # Paso 2: quiz 15 preguntas
 │   ├── onboarding/results/         # Paso 3: matches
 │   ├── match/[id]/                 # Detalle del match
-│   ├── publish/                    # Publicar espacio
+│   ├── publish/                    # Definir espacio + roomie ideal
 │   └── api/match/ + api/profiles/  # API routes
 ├── components/
 │   ├── landing/                    # Hero, Features, HowItWorks, CTA
@@ -93,7 +93,7 @@ convive/
 │   └── shared/                     # Navbar, Footer
 └── lib/
     ├── matching.ts                  # Motor de scoring
-    ├── seed-data.ts                 # 20 perfiles de Cali
+    ├── seed-data.ts                 # 22 perfiles de Cali
     └── types.ts                     # Interfaces TypeScript
 ```
 

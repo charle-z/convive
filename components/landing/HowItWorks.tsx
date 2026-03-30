@@ -41,7 +41,7 @@ const cardVariants = {
 
 export default function HowItWorks() {
   return (
-    <section id="como-funciona" className="py-24 px-4 sm:px-6">
+    <section id="como-funciona" className="scroll-mt-24 py-24 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div

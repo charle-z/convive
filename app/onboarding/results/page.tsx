@@ -18,6 +18,7 @@ import {
   getBudgetMonthly,
   getSpacePriceMonthly,
 } from "@/lib/budget";
+import { readSpaceData, type SpaceData } from "@/lib/space-data";
 import {
   DEFAULT_INTENT,
   INTENT_STORAGE_KEY,
@@ -30,15 +31,6 @@ const SPACE_TYPE_LABELS: Record<string, string> = {
   apartamento: "Apartamento completo",
   "cuarto-compartido": "Cuarto compartido",
 };
-
-interface SpaceData {
-  spaceType?: string;
-  precio?: string;
-  barrio?: string;
-  descripcion?: string;
-  genero?: string;
-  presupuesto?: string;
-}
 
 function SpaceCard({ data }: { data: SpaceData }) {
   const label = SPACE_TYPE_LABELS[data.spaceType ?? ""] ?? data.spaceType ?? "Espacio";
@@ -155,7 +147,7 @@ const RESULTS_COPY: Record<
     adjustLabel: "← Ajustar mi perfil",
     summaryLabel: "personas compatibles encontradas",
     shareText: (score) =>
-      `Encontré el roomie ideal para mi espacio en Convive 🏠\nMi mejor match tiene ${score}% de compatibilidad.\n¿Encontrás el tuyo? → ${getAppUrl()}`,
+      `Encontré el roomie ideal para mi espacio en Convive 🏠\nMi mejor match tiene ${score}% de compatibilidad.\n¿Encuentras el tuyo? → ${getAppUrl()}`,
     savingsLabel: "Aporte anual estimado del roomie ideal",
     savingsSubline: "al año para cubrir el valor del espacio",
     savingsNote:
@@ -296,7 +288,7 @@ function ShareButton({
     const text = shareText(score);
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
-        await navigator.share({ text });
+        await navigator.share({ text, url: getAppUrl() });
         return;
       } catch {}
     }
@@ -359,8 +351,7 @@ export default function ResultsPage() {
 
     if (storedIntent === "ofrezco-cuarto") {
       try {
-        const spaceRaw = localStorage.getItem("convive_space_data");
-        if (spaceRaw) setSpaceData(JSON.parse(spaceRaw) as SpaceData);
+        setSpaceData(readSpaceData());
       } catch {}
     }
 
@@ -548,7 +539,7 @@ export default function ResultsPage() {
                   <div className="flex justify-end mt-1 mb-3">
                     <button
                       onClick={() => setReceiptMatch({ profile, result })}
-                      className="text-xs text-text-secondary hover:text-text transition-colors flex items-center gap-1"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs border border-border/60 bg-surface hover:border-primary/40 hover:text-text transition-colors"
                     >
                       🧾 Ver recibo de compatibilidad
                     </button>
@@ -556,7 +547,15 @@ export default function ResultsPage() {
                 </div>
               ))}
 
-              <div className="pt-6 text-center">
+              <div className="pt-6 text-center flex flex-col items-center gap-3">
+                {intent === "ofrezco-cuarto" && (
+                  <Link
+                    href="/publish"
+                    className="text-sm text-text-secondary hover:text-text transition-colors"
+                  >
+                    ← Editar mi espacio
+                  </Link>
+                )}
                 <Link
                   href="/onboarding/profile"
                   className="text-sm text-text-secondary hover:text-text transition-colors"

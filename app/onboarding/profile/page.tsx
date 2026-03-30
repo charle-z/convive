@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";
 import StepIndicator from "@/components/onboarding/StepIndicator";
 import ConvivenceForm from "@/components/onboarding/ConvivenceForm";
@@ -65,6 +66,17 @@ export default function ProfilePage() {
               {copy.description}
             </p>
           </div>
+
+          {intent === "ofrezco-cuarto" && (
+            <div className="mb-6 text-center">
+              <Link
+                href="/publish"
+                className="text-sm text-text-secondary hover:text-text transition-colors"
+              >
+                ← Editar mi espacio
+              </Link>
+            </div>
+          )}
 
           {ready && <ConvivenceForm />}
         </div>
