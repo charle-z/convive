@@ -18,22 +18,41 @@ const spaceMono = Space_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(DEFAULT_APP_URL),
-  title: "Convive — Elige con quién vivir",
+  title: "Convive | Elige con quien vivir",
   description:
-    "Motor de compatibilidad para roomies en Cali. Encuentra con quién sí y con quién no deberías vivir, antes de mudarte.",
+    "Motor de compatibilidad para roomies en Cali. Descubre con quien si y con quien no deberias vivir antes de mudarte.",
+  applicationName: "Convive",
+  alternates: {
+    canonical: DEFAULT_APP_URL,
+  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
     apple: "/favicon.svg",
   },
   openGraph: {
-    title: "Convive — Elige con quién vivir",
+    title: "Convive | Elige con quien vivir",
     description:
-      "Motor de compatibilidad para roomies en Cali. Sin registro. Sin intermediarios.",
+      "Compara compatibilidad, detecta posibles conflictos y decide mejor con quien vivir antes de mudarte.",
     url: DEFAULT_APP_URL,
     siteName: "Convive",
     locale: "es_CO",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Convive - compatibilidad para roomies",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Convive | Elige con quien vivir",
+    description:
+      "Compara compatibilidad y detecta conflictos antes de mudarte.",
+    images: ["/opengraph-image"],
   },
 };
 
