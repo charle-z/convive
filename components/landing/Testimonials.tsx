@@ -6,23 +6,23 @@ import { motion } from "framer-motion";
 const TESTIMONIALS = [
   {
     quote:
-      "Encontré roomie en 10 minutos. Llevamos 8 meses sin pelear una sola vez por la limpieza.",
-    name: "Valentina R.",
-    meta: "24 · Diseñadora · Granada, Cali",
+      "Match demo con presupuesto alineado, buena compatibilidad en limpieza y fricción baja desde el inicio.",
+    name: "Escenario A",
+    meta: "Presupuesto alineado · Granada, Cali",
     foto: "https://i.pravatar.cc/150?img=5",
   },
   {
     quote:
-      "Antes buscaba en Facebook y era un desastre. Con Convive vi exactamente dónde íbamos a chocar antes de mudarme.",
-    name: "Julián M.",
-    meta: "27 · Dev remoto · El Peñón, Cali",
+      "Caso de demo para alguien que necesitaba detectar choques en horarios y visitas antes de mudarse.",
+    name: "Escenario B",
+    meta: "Horarios compatibles · El Peñón, Cali",
     foto: "https://i.pravatar.cc/150?img=12",
   },
   {
     quote:
-      "Me ahorré $11 millones el año pasado viviendo con alguien compatible. Eso es real.",
-    name: "Andrea S.",
-    meta: "29 · Psicóloga · San Fernando, Cali",
+      "Escenario de roomie para espacio propio, con aporte esperado, zona y reglas del hogar compatibles.",
+    name: "Escenario C",
+    meta: "Espacio propio · San Fernando, Cali",
     foto: "https://i.pravatar.cc/150?img=32",
   },
 ];
@@ -39,7 +39,7 @@ export default function Testimonials() {
           className="text-center mb-12"
         >
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Lo que dicen quienes ya lo probaron
+            Casos simulados de convivencia
           </h2>
         </motion.div>
 
@@ -85,7 +85,7 @@ export default function Testimonials() {
           className="text-center text-xs mt-6"
           style={{ color: "rgba(139,139,163,0.4)" }}
         >
-          * Testimonios referenciales para demo
+          * Escenarios de demo con avatares referenciales, no testimonios de usuarios reales
         </motion.p>
       </div>
     </section>

@@ -23,16 +23,16 @@ import Footer from "@/components/shared/Footer";
 
 const STATS = [
   {
-    value: "7 de cada 10",
-    label: "colombianos han tenido un conflicto grave con un roomie",
+    value: "15",
+    label: "preguntas para construir tu perfil de convivencia",
   },
   {
-    value: "60%",
-    label: "descubrió la incompatibilidad después de mudarse",
+    value: "12",
+    label: "categorías ponderadas según su impacto real",
   },
   {
-    value: "hasta 50%",
-    label: "de reducción en gastos de arriendo al compartir vivienda",
+    value: "22",
+    label: "perfiles demo localizados en Cali para explorar matches",
   },
 ];
 
@@ -237,7 +237,7 @@ export default function ComoFuncionaPage() {
               transition={{ duration: 0.5 }}
               className="text-2xl sm:text-3xl font-bold mb-3"
             >
-              El problema real
+              Qué analiza Convive
             </motion.h2>
             <motion.p
               initial={{ opacity: 0 }}
@@ -246,8 +246,8 @@ export default function ComoFuncionaPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-text-secondary mb-10 max-w-2xl"
             >
-              Compartir vivienda es una decisión financiera y emocional. Hacerla mal
-              cuesta dinero, tiempo y paz mental.
+              Convive prioriza las variables que más suelen definir si una convivencia
+              se sostiene o se rompe: dinero, hábitos, horarios, visitas, ruido y reglas del hogar.
             </motion.p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {STATS.map((s, i) => (
@@ -346,7 +346,7 @@ export default function ComoFuncionaPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-text-secondary mb-8"
             >
-              Así se ve el detalle de un match real. Cada categoría tiene su propio indicador.
+              Así se ve el detalle de un match de demo. Cada categoría tiene su propio indicador.
             </motion.p>
 
             <div

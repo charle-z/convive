@@ -175,8 +175,8 @@ export default function Hero() {
       >
         {[
           { value: "15", label: "variables de convivencia" },
-          { value: "87%", label: "precisión en matches" },
-          { value: "0", label: "sorpresas después de mudarte" },
+          { value: "12", label: "categorías con peso real" },
+          { value: "22", label: "perfiles demo en Cali" },
         ].map((stat) => (
           <div key={stat.label} className="text-center">
             <p className="text-2xl font-bold font-mono text-primary">
